@@ -1016,31 +1016,31 @@ void build_shape_bvh(bvh_shape& bvh, const build_bvh_options& options) {
 }
 
 // Build a BVH from the given set of shape primitives.
-void init_shape_bvh(bvh_shape& bvh, const vector<int>& points,
-    const vector<vec3f>& positions, const vector<float>& radius) {
+void init_points_bvh(bvh_shape& bvh, array_view<const int> points,
+    array_view<const vec3f> positions, array_view<const float> radius) {
     bvh           = {};
-    bvh.points    = points;
-    bvh.positions = positions;
-    bvh.radius    = radius;
+    bvh.points    = {points.begin(), points.end()};
+    bvh.positions = {positions.begin(), positions.end()};
+    bvh.radius    = {radius.begin(), radius.end()};
 }
-void init_shape_bvh(bvh_shape& bvh, const vector<vec2i>& lines,
-    const vector<vec3f>& positions, const vector<float>& radius) {
+void init_lines_bvh(bvh_shape& bvh, array_view<const vec2i> lines,
+    array_view<const vec3f> positions, array_view<const float> radius) {
     bvh           = {};
-    bvh.lines     = lines;
-    bvh.positions = positions;
-    bvh.radius    = radius;
+    bvh.lines     = {lines.begin(), lines.end()};
+    bvh.positions = {positions.begin(), positions.end()};
+    bvh.radius    = {radius.begin(), radius.end()};
 }
-void init_shape_bvh(bvh_shape& bvh, const vector<vec3i>& triangles,
-    const vector<vec3f>& positions) {
+void init_triangles_bvh(bvh_shape& bvh, array_view<const vec3i> triangles,
+    array_view<const vec3f> positions) {
     bvh           = {};
-    bvh.triangles = triangles;
-    bvh.positions = positions;
+    bvh.triangles = {triangles.begin(), triangles.end()};
+    bvh.positions = {positions.begin(), positions.end()};
 }
-void init_shape_bvh(bvh_shape& bvh, const vector<vec4i>& quads,
-    const vector<vec3f>& positions) {
+void init_quads_bvh(bvh_shape& bvh, array_view<const vec4i> quads,
+    array_view<const vec3f> positions) {
     bvh           = {};
-    bvh.quads     = quads;
-    bvh.positions = positions;
+    bvh.quads     = {quads.begin(), quads.end()};
+    bvh.positions = {positions.begin(), positions.end()};
 }
 
 // Build a BVH from a set of primitives.
@@ -1087,11 +1087,11 @@ void build_scene_bvh(bvh_scene& bvh, const build_bvh_options& options) {
 }
 
 // Build a BVH from the given set of instances.
-void init_scene_bvh(bvh_scene& bvh, const vector<bvh_instance>& instances,
-    const vector<bvh_shape>& shape_bvhs) {
+void init_scene_bvh(bvh_scene& bvh, array_view<const bvh_instance> instances,
+    array_view<const bvh_shape> shape_bvhs) {
     bvh            = {};
-    bvh.instances  = instances;
-    bvh.shape_bvhs = shape_bvhs;
+    bvh.instances  = {instances.begin(), instances.end()};
+    bvh.shape_bvhs = {shape_bvhs.begin(), shape_bvhs.end()};
 }
 
 // Recursively recomputes the node bounds for a shape bvh
@@ -1156,24 +1156,24 @@ void refit_scene_bvh_rec(bvh_scene& bvh, int nodeid) {
 
 // Recursively recomputes the node bounds for a shape bvh
 void refit_shape_bvh(bvh_shape& bvh) { refit_shape_bvh_rec(bvh, 0); }
-void refit_scene_bvh(bvh_scene& bvh, const vector<int>& updated_instances,
-    const vector<int>& updated_shapes) {
+void refit_scene_bvh(bvh_scene& bvh, array_view<const int> updated_instances,
+    array_view<const int> updated_shapes) {
     for (auto shape_id : updated_shapes)
         refit_shape_bvh(bvh.shape_bvhs[shape_id]);
     if (!updated_instances.empty()) refit_scene_bvh_rec(bvh, 0);
 }
 
 // Recursively recomputes the node bounds for a shape bvh
-void update_shape_bvh(bvh_shape& bvh, const vector<vec3f>& positions) {
-    bvh.positions = positions;
+void update_shape_bvh(bvh_shape& bvh, array_view<const vec3f> positions) {
+    bvh.positions = {positions.begin(), positions.end()};
 }
-void update_shape_bvh(bvh_shape& bvh, const vector<vec3f>& positions,
-    const vector<float>& radius) {
-    bvh.positions = positions;
-    bvh.radius    = radius;
+void update_shape_bvh(bvh_shape& bvh, array_view<const vec3f> positions,
+    array_view<const float> radius) {
+    bvh.positions = {positions.begin(), positions.end()};
+    bvh.radius    = {radius.begin(), radius.end()};
 }
-void update_scene_bvh(bvh_scene& bvh, const vector<bvh_instance>& instances) {
-    bvh.instances = instances;
+void update_scene_bvh(bvh_scene& bvh, array_view<const bvh_instance> instances) {
+    bvh.instances = {instances.begin(), instances.end()};
 }
 bvh_shape& get_shape_bvh(bvh_scene& bvh, int shape_id) {
     return bvh.shape_bvhs[shape_id];

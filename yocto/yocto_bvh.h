@@ -174,34 +174,34 @@ struct build_bvh_options {
 };
 
 // Build a BVH from the given set of shape primitives.
-void init_shape_bvh(bvh_shape& bvh, const vector<int>& points,
-    const vector<vec3f>& positions, const vector<float>& radius);
-void init_shape_bvh(bvh_shape& bvh, const vector<vec2i>& lines,
-    const vector<vec3f>& positions, const vector<float>& radius);
-void init_shape_bvh(bvh_shape& bvh, const vector<vec3i>& triangles,
-    const vector<vec3f>& positions);
-void init_shape_bvh(
-    bvh_shape& bvh, const vector<vec4i>& quads, const vector<vec3f>& positions);
+void init_points_bvh(bvh_shape& bvh, array_view<const int> points,
+    array_view<const vec3f> positions, array_view<const float> radius);
+void init_lines_bvh(bvh_shape& bvh, array_view<const vec2i> lines,
+    array_view<const vec3f> positions, array_view<const float> radius);
+void init_triangles_bvh(bvh_shape& bvh, array_view<const vec3i> triangles,
+    array_view<const vec3f> positions);
+void init_quads_bvh(
+    bvh_shape& bvh, array_view<const vec4i> quads, array_view<const vec3f> positions);
 
 // Build a BVH from the given set of instances.
-void init_scene_bvh(bvh_scene& bvh, const vector<bvh_instance>& instances,
-    const vector<bvh_shape>& shape_bvhs);
+void init_scene_bvh(bvh_scene& bvh, array_view<const bvh_instance> instances,
+    array_view<const bvh_shape> shape_bvhs);
 
 // Build the bvh acceleration structure.
 void build_shape_bvh(bvh_shape& bvh, const build_bvh_options& options = {});
 void build_scene_bvh(bvh_scene& bvh, const build_bvh_options& options = {});
 
 // Update the node data for shape and scene bvhs.
-void update_shape_bvh(bvh_shape& bvh, const vector<vec3f>& positions);
-void update_shape_bvh(bvh_shape& bvh, const vector<vec3f>& positions,
-    const vector<float>& radius);
-void update_scene_bvh(bvh_scene& bvh, const vector<bvh_instance>& instances);
+void update_shape_bvh(bvh_shape& bvh, array_view<const vec3f> positions);
+void update_shape_bvh(bvh_shape& bvh, array_view<const vec3f> positions,
+    array_view<const float> radius);
+void update_scene_bvh(bvh_scene& bvh, array_view<const bvh_instance> instances);
 bvh_shape& get_shape_bvh(bvh_scene& bvh, int shape_id);
 
 // Refit bvh data
 void refit_shape_bvh(bvh_shape& bvh);
-void refit_scene_bvh(bvh_scene& bvh, const vector<int>& updated_instances,
-    const vector<int>& updated_shapes);
+void refit_scene_bvh(bvh_scene& bvh, array_view<const int> updated_instances,
+    array_view<const int> updated_shapes);
 
 // Results of intersect_xxx and overlap_xxx functions that include hit flag,
 // instance id, shape element id, shape element uv and intersection distance.

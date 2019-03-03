@@ -138,9 +138,11 @@ template<typename T>
 struct array_view {
     // constructors
     constexpr array_view() : ptr{nullptr}, count{0} { }
-    constexpr array_view(T* data, size_t count) : ptr{nullptr}, count{count} { }
-    constexpr array_view(vector<T>& data) : ptr{data.data()}, count{data.size()} { }
-    constexpr array_view(const vector<T>& data) : ptr{data.data()}, count{data.size()} { }
+    constexpr array_view(T* data, size_t count) : ptr{data}, count{count} { }
+    // template<typename U, typename = std::enable_if<std::is_const<T>>::value>>
+    // constexpr array_view(vector<U>& data) : ptr{data.data()}, count{data.size()} { }
+    template<typename U, typename _ = std::enable_if_t<std::is_const_v<T>>>
+    constexpr array_view(const vector<U>& data) : ptr{data.data()}, count{data.size()} { }
 
     // size
     constexpr bool empty() const { return count == 0; }

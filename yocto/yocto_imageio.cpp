@@ -244,7 +244,7 @@ void load_pfm_image(const string& filename, image4f& img) {
     img = image{{width, height}, (const vec4f*)pixels};
     delete[] pixels;
 }
-void save_pfm_image(const string& filename, const image4f& img) {
+void save_pfm_image(const string& filename, image_view<const vec4f> img) {
     if (!save_pfm(filename.c_str(), img.imsize().x, img.imsize().y, 4,
             (float*)img.data())) {
         throw imageio_error("error saving image " + filename);
@@ -264,7 +264,7 @@ void load_exr_image(const string& filename, image4f& img) {
     img = image{{width, height}, (const vec4f*)pixels};
     free(pixels);
 }
-void save_exr_image(const string& filename, const image4f& img) {
+void save_exr_image(const string& filename, image_view<const vec4f> img) {
     if (!SaveEXR((float*)img.data(), img.imsize().x, img.imsize().y, 4,
             filename.c_str())) {
         throw imageio_error("error saving image " + filename);
@@ -292,31 +292,31 @@ void load_stb_image(const string& filename, image4f& img) {
 }
 
 // save an image with stbi
-void save_png_image(const string& filename, const image4b& img) {
+void save_png_image(const string& filename, image_view<const vec4b> img) {
     if (!stbi_write_png(filename.c_str(), img.imsize().x, img.imsize().y, 4,
             img.data(), img.imsize().x * 4)) {
         throw imageio_error("error saving image " + filename);
     }
 }
-void save_jpg_image(const string& filename, const image4b& img) {
+void save_jpg_image(const string& filename, image_view<const vec4b> img) {
     if (!stbi_write_jpg(
             filename.c_str(), img.imsize().x, img.imsize().y, 4, img.data(), 75)) {
         throw imageio_error("error saving image " + filename);
     }
 }
-void save_tga_image(const string& filename, const image4b& img) {
+void save_tga_image(const string& filename, image_view<const vec4b> img) {
     if (!stbi_write_tga(
             filename.c_str(), img.imsize().x, img.imsize().y, 4, img.data())) {
         throw imageio_error("error saving image " + filename);
     }
 }
-void save_bmp_image(const string& filename, const image4b& img) {
+void save_bmp_image(const string& filename, image_view<const vec4b> img) {
     if (!stbi_write_bmp(
             filename.c_str(), img.imsize().x, img.imsize().y, 4, img.data())) {
         throw imageio_error("error saving image " + filename);
     }
 }
-void save_hdr_image(const string& filename, const image4f& img) {
+void save_hdr_image(const string& filename, image_view<const vec4f> img) {
     if (!stbi_write_hdr(filename.c_str(), img.imsize().x, img.imsize().y, 4,
             (float*)img.data())) {
         throw imageio_error("error saving image " + filename);
@@ -472,7 +472,7 @@ void load_image(const string& filename, image4f& img) {
 }
 
 // Saves an hdr image.
-void save_image(const string& filename, const image4f& img) {
+void save_image(const string& filename, image_view<const vec4f> img) {
     auto ext = get_extension(filename);
     if (ext == "png" || ext == "PNG") {
         auto img8 = image4b{img.imsize()};
@@ -542,7 +542,7 @@ void load_image(const string& filename, image4b& img) {
 }
 
 // Saves an ldr image.
-void save_image(const string& filename, const image4b& img) {
+void save_image(const string& filename, image_view<const vec4b> img) {
     auto ext = get_extension(filename);
     if (ext == "png" || ext == "PNG") {
         save_png_image(filename, img);
@@ -576,7 +576,7 @@ void load_image_from_memory(const byte* data, int data_size, image4b& img) {
 
 // Convenience helper that saves an HDR images as wither a linear HDR file or
 // a tonemapped LDR file depending on file name
-void save_tonemapped_image(const string& filename, const image4f& hdr,
+void save_tonemapped_image(const string& filename, image_view<const vec4f> hdr,
     float exposure, bool filmic, bool srgb) {
     if (is_hdr_filename(filename)) {
         save_image(filename, hdr);

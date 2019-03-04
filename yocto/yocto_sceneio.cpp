@@ -4867,7 +4867,7 @@ void load_cyhair_mesh(const string& filename, vector<int>& points,
 
     // compute tangents
     normals.resize(positions.size());
-    compute_vertex_tangents(normals, lines, positions);
+    compute_lines_tangents(normals, lines, positions);
 
     // fix colors
     for (auto& c : color) c = srgb_to_linear(c);

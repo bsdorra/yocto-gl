@@ -70,13 +70,13 @@ void compute_shape_normals(const yocto_shape& shape, vector<vec3f>& normals) {
     normals.assign(shape.positions.size(), {0, 0, 1});
     if (!shape.points.empty()) {
     } else if (!shape.lines.empty()) {
-        compute_vertex_tangents(normals, shape.lines, shape.positions);
+        compute_lines_tangents(normals, shape.lines, shape.positions);
     } else if (!shape.triangles.empty()) {
-        compute_vertex_normals(normals, shape.triangles, shape.positions);
+        compute_triangles_normals(normals, shape.triangles, shape.positions);
     } else if (!shape.quads.empty()) {
-        compute_vertex_normals(normals, shape.quads, shape.positions);
+        compute_quads_normals(normals, shape.quads, shape.positions);
     } else if (!shape.quads_positions.empty()) {
-        compute_vertex_normals(normals, shape.quads_positions, shape.positions);
+        compute_quads_normals(normals, shape.quads_positions, shape.positions);
     } else {
         throw std::runtime_error("unknown element type");
     }
@@ -166,7 +166,7 @@ void displace_shape(yocto_shape& shape, const yocto_texture& displacement) {
             }
         }
         auto normals = vector<vec3f>{shape.positions.size()};
-        compute_vertex_normals(normals, shape.quads_positions, shape.positions);
+        compute_quads_normals(normals, shape.quads_positions, shape.positions);
         for (auto vid = 0; vid < shape.positions.size(); vid++) {
             shape.positions[vid] += normals[vid] * offset[vid] / count[vid];
         }
@@ -506,7 +506,7 @@ void add_missing_tangent_space(yocto_scene& scene) {
         if (!shape.triangles.empty()) {
             if (shape.normals.empty()) {
                 shape.normals.resize(shape.positions.size());
-                compute_vertex_normals(
+                compute_triangles_normals(
                     shape.normals, shape.triangles, shape.positions);
             }
             shape.tangentspaces.resize(shape.positions.size());

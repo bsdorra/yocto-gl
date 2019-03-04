@@ -36,8 +36,8 @@
 //    `interpolate_triangle()` and `interpolate_quad()`
 // 3. evaluate Bezier curves and derivatives with `interpolate_bezier()` and
 //    `interpolate_bezier_derivative()`
-// 4. compute smooth normals and tangents with `compute_vertex_normals()`
-//   `compute_vertex_tangents()`
+// 4. compute smooth normals and tangents with `compute_triangles_normals()`
+//   `compute_lines_tangents()`
 // 5. compute tangent frames from texture coordinates with
 //    `compute_tangent_spaces()`
 // 6. compute skinning with `compute_skinning()` and
@@ -213,12 +213,12 @@ inline T interpolate_bezier_derivative(
 namespace yocto {
 
 // Compute per-vertex normals/tangents for lines/triangles/quads.
-void compute_vertex_tangents(vector<vec3f>& tangents,
-    const vector<vec2i>& lines, const vector<vec3f>& positions);
-void compute_vertex_normals(vector<vec3f>& normals,
-    const vector<vec3i>& triangles, const vector<vec3f>& positions);
-void compute_vertex_normals(vector<vec3f>& normals, const vector<vec4i>& quads,
-    const vector<vec3f>& positions);
+void compute_lines_tangents(vector<vec3f>& tangents,
+    array_view<const vec2i> lines, array_view<const vec3f> positions);
+void compute_triangles_normals(vector<vec3f>& normals,
+    array_view<const vec3i> triangles, array_view<const vec3f> positions);
+void compute_quads_normals(vector<vec3f>& normals,
+    array_view<const vec4i> quads, array_view<const vec3f> positions);
 
 // Compute per-vertex tangent space for triangle meshes.
 // Tangent space is defined by a four component vector.
@@ -226,19 +226,19 @@ void compute_vertex_normals(vector<vec3f>& normals, const vector<vec4i>& quads,
 // The fourth component is the sign of the tangent wrt the v texcoord.
 // Tangent frame is useful in normal mapping.
 void compute_tangent_spaces(vector<vec4f>& tangent_spaces,
-    const vector<vec3i>& triangles, const vector<vec3f>& positions,
-    const vector<vec3f>& normals, const vector<vec2f>& texturecoords);
+    array_view<const vec3i> triangles, array_view<const vec3f> positions,
+    array_view<const vec3f> normals, array_view<const vec2f> texturecoords);
 
 // Apply skinning to vertex position and normals.
 void compute_skinning(vector<vec3f>& skinned_positions,
-    vector<vec3f>& skinned_normals, const vector<vec3f>& positions,
-    const vector<vec3f>& normals, const vector<vec4f>& weights,
-    const vector<vec4i>& joints, const vector<frame3f>& xforms);
+    vector<vec3f>& skinned_normals, array_view<const vec3f> positions,
+    array_view<const vec3f> normals, array_view<const vec4f> weights,
+    array_view<const vec4i> joints, array_view<const frame3f> xforms);
 // Apply skinning as specified in Khronos glTF.
 void compute_matrix_skinning(vector<vec3f>& skinned_positions,
-    vector<vec3f>& skinned_normals, const vector<vec3f>& positions,
-    const vector<vec3f>& normals, const vector<vec4f>& weights,
-    const vector<vec4i>& joints, const vector<mat4f>& xforms);
+    vector<vec3f>& skinned_normals, array_view<const vec3f> positions,
+    array_view<const vec3f> normals, array_view<const vec4f> weights,
+    array_view<const vec4i> joints, array_view<const mat4f> xforms);
 
 }  // namespace yocto
 
@@ -258,8 +258,8 @@ struct edge_map {
 };
 
 // Initialize an edge map with elements.
-void insert_edges(edge_map& emap, const vector<vec3i>& triangles);
-void insert_edges(edge_map& emap, const vector<vec4i>& quads);
+void insert_triangles_edges(edge_map& emap, array_view<const vec3i> triangles);
+void insert_quads_edges(edge_map& emap, array_view<const vec4i> quads);
 // Insert an edge and return its index
 int insert_edge(edge_map& emap, const vec2i& edge);
 // Get the edge index / insertion count
@@ -268,8 +268,8 @@ int get_edge_index(const edge_map& emap, const vec2i& edge);
 int  get_num_edges(const edge_map& emap);
 void get_edges(const edge_map& emap, vector<vec2i>& edges);
 void get_boundary(const edge_map& emap, vector<vec2i>& edges);
-void get_edges(const vector<vec3i>& triangles, vector<vec2i>& edges);
-void get_edges(const vector<vec4i>& quads, vector<vec2i>& edges);
+void get_edges(array_view<const vec3i> triangles, vector<vec2i>& edges);
+void get_edges(array_view<const vec4i> quads, vector<vec2i>& edges);
 
 // A sparse grid of cells, containing list of points. Cells are stored in
 // a dictionary to get sparsing. Helpful for nearest neighboor lookups.
@@ -283,7 +283,7 @@ struct hash_grid {
 // Create a hash_grid
 void init_hash_grid(hash_grid& grid, float cell_size);
 void init_hash_grid(
-    hash_grid& grid, const vector<vec3f>& positions, float cell_size);
+    hash_grid& grid, array_view<const vec3f> positions, float cell_size);
 // Inserts a point into the grid
 int insert_vertex(hash_grid& grid, const vec3f& position);
 // Finds the nearest neighboors within a given radius
@@ -301,35 +301,36 @@ namespace yocto {
 
 // Convert quads to triangles
 void convert_quads_to_triangles(
-    vector<vec3i>& triangles, const vector<vec4i>& quads);
+    vector<vec3i>& triangles, array_view<const vec4i> quads);
 // Convert quads to triangles with a diamond-like topology.
 // Quads have to be consecutive one row after another.
 void convert_quads_to_triangles(
-    vector<vec3i>& triangles, const vector<vec4i>& quads, int row_length);
+    vector<vec3i>& triangles, array_view<const vec4i> quads, int row_length);
 // Convert triangles to quads by creating degenerate quads
 void convert_triangles_to_quads(
-    vector<vec4i>& quads, const vector<vec3i>& triangles);
+    vector<vec4i>& quads, array_view<const vec3i> triangles);
 
 // Convert beziers to lines using 3 lines for each bezier.
 void convert_bezier_to_lines(
-    vector<vec2i>& lines, const vector<vec4i>& beziers);
+    vector<vec2i>& lines, array_view<const vec4i> beziers);
 
 // Convert face-varying data to single primitives. Returns the quads indices
 // and face ids and filled vectors for pos, norm, texcoord and colors.
 void convert_facevarying(vector<vec4i>& split_quads,
     vector<vec3f>& split_positions, vector<vec3f>& split_normals,
-    vector<vec2f>& split_texturecoords, const vector<vec4i>& quads_positions,
-    const vector<vec4i>& quads_normals,
-    const vector<vec4i>& quads_texturecoords, const vector<vec3f>& positions,
-    const vector<vec3f>& normals, const vector<vec2f>& texturecoords);
+    vector<vec2f>& split_texturecoords, array_view<const vec4i> quads_positions,
+    array_view<const vec4i> quads_normals,
+    array_view<const vec4i> quads_texturecoords,
+    array_view<const vec3f> positions, array_view<const vec3f> normals,
+    array_view<const vec2f> texturecoords);
 
 // Split primitives per id
 void ungroup_lines(vector<vector<vec2i>>& split_lines,
-    const vector<vec2i>& lines, const vector<int>& ids);
+    array_view<const vec2i> lines, array_view<const int> ids);
 void ungroup_triangles(vector<vector<vec3i>>& split_triangles,
-    const vector<vec3i>& triangles, const vector<int>& ids);
+    array_view<const vec3i> triangles, array_view<const int> ids);
 void ungroup_quads(vector<vector<vec4i>>& split_quads,
-    const vector<vec4i>& quads, const vector<int>& ids);
+    array_view<const vec4i> quads, array_view<const int> ids);
 
 // Weld vertices within a threshold.
 void weld_vertices(
@@ -341,27 +342,30 @@ void weld_quads(
 
 // Merge shape elements
 void merge_lines(
-    vector<vec2i>& lines, const vector<vec2i>& merge_lines, int num_verts);
+    vector<vec2i>& lines, array_view<const vec2i> merge_lines, int num_verts);
 void merge_triangles(vector<vec3i>& triangles,
-    const vector<vec2i>& merge_triangles, int num_verts);
+    array_view<const vec2i> merge_triangles, int num_verts);
 void merge_quads(
-    vector<vec4i>& quads, const vector<vec4i>& merge_quads, int num_verts);
+    vector<vec4i>& quads, array_view<const vec4i> merge_quads, int num_verts);
 void merge_lines(vector<vec2i>& lines, vector<vec3f>& positions,
     vector<vec3f>& tangents, vector<vec2f>& texturecoords,
-    vector<float>& radius, const vector<vec2i>& merge_lines,
-    const vector<vec3f>& merge_positions, const vector<vec3f>& merge_tangents,
-    const vector<vec2f>& merge_texturecoords,
-    const vector<float>& merge_radius);
+    vector<float>& radius, array_view<const vec2i> merge_lines,
+    array_view<const vec3f> merge_positions,
+    array_view<const vec3f> merge_tangents,
+    array_view<const vec2f> merge_texturecoords,
+    array_view<const float> merge_radius);
 void merge_triangles(vector<vec3i>& triangles, vector<vec3f>& positions,
     vector<vec3f>& normals, vector<vec2f>& texturecoords,
-    const vector<vec2i>& merge_triangles, const vector<vec3f>& merge_positions,
-    const vector<vec3f>& merge_normals,
-    const vector<vec2f>& merge_texturecoords);
+    array_view<const vec2i> merge_triangles,
+    array_view<const vec3f> merge_positions,
+    array_view<const vec3f> merge_normals,
+    array_view<const vec2f> merge_texturecoords);
 void merge_quads(vector<vec4i>& quads, vector<vec3f>& positions,
     vector<vec3f>& normals, vector<vec2f>& texturecoords,
-    const vector<vec4i>& merge_quads, const vector<vec3f>& merge_positions,
-    const vector<vec3f>& merge_normals,
-    const vector<vec2f>& merge_texturecoords);
+    array_view<const vec4i> merge_quads,
+    array_view<const vec3f> merge_positions,
+    array_view<const vec3f> merge_normals,
+    array_view<const vec2f> merge_texturecoords);
 
 }  // namespace yocto
 
@@ -427,39 +431,39 @@ namespace yocto {
 // Pick a point in a point set uniformly.
 int  sample_points_element(int npoints, float re);
 void sample_points_element_cdf(vector<float>& cdf, int npoints);
-int  sample_points_element(const vector<float>& cdf, float re);
+int  sample_points_element(array_view<const float> cdf, float re);
 
 // Pick a point on lines uniformly.
-void sample_lines_element_cdf(vector<float>& cdf, const vector<vec2i>& lines,
-    const vector<vec3f>& positions);
+void sample_lines_element_cdf(vector<float>& cdf, array_view<const vec2i> lines,
+    array_view<const vec3f> positions);
 pair<int, float> sample_lines_element(
-    const vector<float>& cdf, float re, float ru);
+    array_view<const float> cdf, float re, float ru);
 
 // Pick a point on a triangle mesh uniformly.
 void             sample_triangles_element_cdf(vector<float>& cdf,
-                const vector<vec3i>& triangles, const vector<vec3f>& positions);
+                array_view<const vec3i> triangles, array_view<const vec3f> positions);
 pair<int, vec2f> sample_triangles_element(
-    const vector<float>& cdf, float re, const vec2f& ruv);
+    array_view<const float> cdf, float re, const vec2f& ruv);
 
 // Pick a point on a quad mesh uniformly.
-void sample_quads_element_cdf(vector<float>& cdf, const vector<vec4i>& quads,
-    const vector<vec3f>& positions);
+void sample_quads_element_cdf(vector<float>& cdf, array_view<const vec4i> quads,
+    array_view<const vec3f> positions);
 pair<int, vec2f> sample_quads_element(
-    const vector<float>& cdf, float re, const vec2f& ruv);
-pair<int, vec2f> sample_quads_element(const vector<vec4i>& quads,
-    const vector<float>& cdf, float re, const vec2f& ruv);
+    array_view<const float> cdf, float re, const vec2f& ruv);
+pair<int, vec2f> sample_quads_element(array_view<const vec4i> quads,
+    array_view<const float> cdf, float re, const vec2f& ruv);
 
 // Samples a set of points over a triangle/quad mesh uniformly. Returns pos,
 // norm and texcoord of the sampled points.
 void sample_triangles_points(vector<vec3f>& sampled_positions,
     vector<vec3f>& sampled_normals, vector<vec2f>& sampled_texturecoords,
-    const vector<vec3i>& triangles, const vector<vec3f>& positions,
-    const vector<vec3f>& normals, const vector<vec2f>& texturecoords,
+    array_view<const vec3i> triangles, array_view<const vec3f> positions,
+    array_view<const vec3f> normals, array_view<const vec2f> texturecoords,
     int npoints, int seed = 7);
 void sample_quads_points(vector<vec3f>& sampled_positions,
     vector<vec3f>& sampled_normals, vector<vec2f>& sampled_texturecoords,
-    const vector<vec4i>& quads, const vector<vec3f>& positions,
-    const vector<vec3f>& normals, const vector<vec2f>& texturecoords,
+    array_view<const vec4i> quads, array_view<const vec3f> positions,
+    array_view<const vec3f> normals, array_view<const vec2f> texturecoords,
     int npoints, int seed = 7);
 
 }  // namespace yocto
@@ -487,11 +491,11 @@ struct geodesic_solver {
 
 // Construct an edge graph
 void init_geodesic_solver(geodesic_solver& solver,
-    const vector<vec3i>& triangles, const vector<vec3f>& positions);
+    array_view<const vec3i> triangles, array_view<const vec3f> positions);
 void compute_geodesic_distances(geodesic_solver& solver,
-    vector<float>& distances, const vector<int>& sources);
+    vector<float>& distances, array_view<const int> sources);
 void convert_distance_to_color(
-    vector<vec4f>& colors, const vector<float>& distances);
+    vector<vec4f>& colors, array_view<const float> distances);
 
 }  // namespace yocto
 
@@ -599,9 +603,9 @@ void make_bezier_circle_shape(
 // rotation: rotation added to hair (angle/strength)
 void make_hair_shape(vector<vec2i>& lines, vector<vec3f>& positions,
     vector<vec3f>& normals, vector<vec2f>& texturecoords, vector<float>& radius,
-    const vec2i& steps, const vector<vec3i>& striangles,
-    const vector<vec4i>& squads, const vector<vec3f>& spos,
-    const vector<vec3f>& snorm, const vector<vec2f>& stexcoord,
+    const vec2i& steps, array_view<const vec3i> striangles,
+    array_view<const vec4i> squads, array_view<const vec3f> spos,
+    array_view<const vec3f> snorm, array_view<const vec2f> stexcoord,
     const vec2f& length = {0.1f, 0.1f}, const vec2f& rad = {0.001f, 0.001f},
     const vec2f& noise = zero2f, const vec2f& clump = zero2f,
     const vec2f& rotation = zero2f, int seed = 7);

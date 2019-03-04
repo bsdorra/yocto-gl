@@ -38,8 +38,8 @@
 namespace yocto {
 
 // Compute per-vertex tangents for lines.
-void compute_vertex_tangents(vector<vec3f>& tangents,
-    const vector<vec2i>& lines, const vector<vec3f>& positions) {
+void compute_lines_tangents(vector<vec3f>& tangents,
+    array_view<const vec2i> lines, array_view<const vec3f> positions) {
     if (tangents.size() != positions.size()) {
         throw std::out_of_range("array should be the same length");
     }
@@ -54,8 +54,8 @@ void compute_vertex_tangents(vector<vec3f>& tangents,
 }
 
 // Compute per-vertex normals for triangles.
-void compute_vertex_normals(vector<vec3f>& normals,
-    const vector<vec3i>& triangles, const vector<vec3f>& positions) {
+void compute_triangles_normals(vector<vec3f>& normals,
+    array_view<const vec3i> triangles, array_view<const vec3f> positions) {
     if (normals.size() != positions.size()) {
         throw std::out_of_range("array should be the same length");
     }
@@ -73,8 +73,8 @@ void compute_vertex_normals(vector<vec3f>& normals,
 }
 
 // Compute per-vertex normals for quads.
-void compute_vertex_normals(vector<vec3f>& normals, const vector<vec4i>& quads,
-    const vector<vec3f>& positions) {
+void compute_quads_normals(vector<vec3f>& normals,
+    array_view<const vec4i> quads, array_view<const vec3f> positions) {
     if (normals.size() != positions.size()) {
         throw std::out_of_range("array should be the same length");
     }
@@ -98,8 +98,8 @@ void compute_vertex_normals(vector<vec3f>& normals, const vector<vec4i>& quads,
 // The fourth component is the sign of the tangent wrt the V texcoord.
 // Tangent frame is useful in normal mapping.
 void compute_tangent_spaces(vector<vec4f>& tangent_spaces,
-    const vector<vec3i>& triangles, const vector<vec3f>& positions,
-    const vector<vec3f>& normals, const vector<vec2f>& texturecoords) {
+    array_view<const vec3i> triangles, array_view<const vec3f> positions,
+    array_view<const vec3f> normals, array_view<const vec2f> texturecoords) {
     auto tangu = vector<vec3f>(positions.size(), zero3f);
     auto tangv = vector<vec3f>(positions.size(), zero3f);
     for (auto t : triangles) {
@@ -124,9 +124,9 @@ void compute_tangent_spaces(vector<vec4f>& tangent_spaces,
 
 // Apply skinning
 void compute_skinning(vector<vec3f>& skinned_positions,
-    vector<vec3f>& skinned_normals, const vector<vec3f>& positions,
-    const vector<vec3f>& normals, const vector<vec4f>& weights,
-    const vector<vec4i>& joints, const vector<frame3f>& xforms) {
+    vector<vec3f>& skinned_normals, array_view<const vec3f> positions,
+    array_view<const vec3f> normals, array_view<const vec4f> weights,
+    array_view<const vec4i> joints, array_view<const frame3f> xforms) {
     if (skinned_positions.size() != positions.size() ||
         skinned_normals.size() != normals.size()) {
         throw std::out_of_range("arrays should be the same size");
@@ -153,9 +153,9 @@ void compute_skinning(vector<vec3f>& skinned_positions,
 
 // Apply skinning as specified in Khronos glTF
 void compute_matrix_skinning(vector<vec3f>& skinned_positions,
-    vector<vec3f>& skinned_normals, const vector<vec3f>& positions,
-    const vector<vec3f>& normals, const vector<vec4f>& weights,
-    const vector<vec4i>& joints, const vector<mat4f>& xforms) {
+    vector<vec3f>& skinned_normals, array_view<const vec3f> positions,
+    array_view<const vec3f> normals, array_view<const vec4f> weights,
+    array_view<const vec4i> joints, array_view<const mat4f> xforms) {
     if (skinned_positions.size() != positions.size() ||
         skinned_normals.size() != normals.size()) {
         throw std::out_of_range("arrays should be the same size");
@@ -183,7 +183,7 @@ inline vec2i make_edgemap_edge(const vec2i& e) {
 }
 
 // Initialize an edge map with elements.
-void insert_edges(edge_map& emap, const vector<vec3i>& triangles) {
+void insert_triangles_edges(edge_map& emap, array_view<const vec3i> triangles) {
     for (int i = 0; i < triangles.size(); i++) {
         auto& t = triangles[i];
         insert_edge(emap, {t.x, t.y});
@@ -191,7 +191,7 @@ void insert_edges(edge_map& emap, const vector<vec3i>& triangles) {
         insert_edge(emap, {t.z, t.x});
     }
 }
-void insert_edges(edge_map& emap, const vector<vec4i>& quads) {
+void insert_quads_edges(edge_map& emap, array_view<const vec4i> quads) {
     for (int i = 0; i < quads.size(); i++) {
         auto& q = quads[i];
         insert_edge(emap, {q.x, q.y});
@@ -235,14 +235,14 @@ void get_boundary(const edge_map& emap, vector<vec2i>& boundary) {
             boundary.push_back(emap.edges[edge_index]);
     }
 }
-void get_edges(const vector<vec3i>& triangles, vector<vec2i>& edges) {
+void get_edges(array_view<const vec3i> triangles, vector<vec2i>& edges) {
     auto emap = edge_map{};
-    insert_edges(emap, triangles);
+    insert_triangles_edges(emap, triangles);
     get_edges(emap, edges);
 }
-void get_edges(const vector<vec4i>& quads, vector<vec2i>& edges) {
+void get_edges(array_view<const vec4i> quads, vector<vec2i>& edges) {
     auto emap = edge_map{};
-    insert_edges(emap, quads);
+    insert_quads_edges(emap, quads);
     get_edges(emap, edges);
 }
 
@@ -259,7 +259,7 @@ void init_hash_grid(hash_grid& grid, float cell_size) {
     grid.cell_inv_size = 1 / cell_size;
 }
 void init_hash_grid(
-    hash_grid& grid, const vector<vec3f>& positions, float cell_size) {
+    hash_grid& grid, array_view<const vec3f> positions, float cell_size) {
     grid               = hash_grid{};
     grid.cell_size     = cell_size;
     grid.cell_inv_size = 1 / cell_size;
@@ -317,7 +317,7 @@ namespace yocto {
 
 // Convert quads to triangles
 void convert_quads_to_triangles(
-    vector<vec3i>& triangles, const vector<vec4i>& quads) {
+    vector<vec3i>& triangles, array_view<const vec4i> quads) {
     triangles.clear();
     triangles.reserve(quads.size() * 2);
     for (auto& q : quads) {
@@ -329,7 +329,7 @@ void convert_quads_to_triangles(
 // Convert quads to triangles with a diamond-like topology.
 // Quads have to be consecutive one row after another.
 void convert_quads_to_triangles(
-    vector<vec3i>& triangles, const vector<vec4i>& quads, int row_length) {
+    vector<vec3i>& triangles, array_view<const vec4i> quads, int row_length) {
     triangles.clear();
     triangles.reserve(quads.size() * 2);
     for (auto& q : quads) {
@@ -354,7 +354,7 @@ void convert_quads_to_triangles(
 
 // Convert triangles to quads by creating degenerate quads
 void convert_triangles_to_quads(
-    vector<vec4i>& quads, const vector<vec3i>& triangles) {
+    vector<vec4i>& quads, array_view<const vec3i> triangles) {
     quads.clear();
     quads.reserve(triangles.size());
     for (auto& t : triangles) quads.push_back({t.x, t.y, t.z, t.z});
@@ -362,7 +362,7 @@ void convert_triangles_to_quads(
 
 // Convert beziers to lines using 3 lines for each bezier.
 void convert_bezier_to_lines(
-    vector<vec2i>& lines, const vector<vec4i>& beziers) {
+    vector<vec2i>& lines, array_view<const vec4i> beziers) {
     lines.clear();
     lines.reserve(beziers.size() * 3);
     for (auto b : beziers) {
@@ -376,10 +376,11 @@ void convert_bezier_to_lines(
 // and filled vectors for pos, norm and texcoord.
 void convert_facevarying(vector<vec4i>& split_quads,
     vector<vec3f>& split_positions, vector<vec3f>& split_normals,
-    vector<vec2f>& split_texturecoords, const vector<vec4i>& quads_positions,
-    const vector<vec4i>& quads_normals,
-    const vector<vec4i>& quads_texturecoords, const vector<vec3f>& positions,
-    const vector<vec3f>& normals, const vector<vec2f>& texturecoords) {
+    vector<vec2f>& split_texturecoords, array_view<const vec4i> quads_positions,
+    array_view<const vec4i> quads_normals,
+    array_view<const vec4i> quads_texturecoords,
+    array_view<const vec3f> positions, array_view<const vec3f> normals,
+    array_view<const vec2f> texturecoords) {
     // make faces unique
     unordered_map<vec3i, int> vert_map;
     split_quads.resize(quads_positions.size());
@@ -429,24 +430,24 @@ void convert_facevarying(vector<vec4i>& split_quads,
 
 // Split primitives per id
 template <typename T>
-void ungroup_elems(vector<vector<T>>& split_elems, const vector<T>& elems,
-    const vector<int>& ids) {
-    auto max_id = *max_element(ids.begin(), ids.end());
+void ungroup_elems(vector<vector<T>>& split_elems, array_view<const T> elems,
+    array_view<const int> ids) {
+    auto max_id = *std::max_element(ids.begin(), ids.end());
     split_elems.resize(max_id + 1);
     for (auto elem_id = 0; elem_id < elems.size(); elem_id++) {
         split_elems[ids[elem_id]].push_back(elems[elem_id]);
     }
 }
 void ungroup_lines(vector<vector<vec2i>>& split_lines,
-    const vector<vec2i>& lines, const vector<int>& ids) {
+    array_view<const vec2i> lines, array_view<const int> ids) {
     ungroup_elems(split_lines, lines, ids);
 }
 void ungroup_triangles(vector<vector<vec3i>>& split_triangles,
-    const vector<vec3i>& triangles, const vector<int>& ids) {
+    array_view<const vec3i> triangles, array_view<const int> ids) {
     ungroup_elems(split_triangles, triangles, ids);
 }
 void ungroup_quads(vector<vector<vec4i>>& split_quads,
-    const vector<vec4i>& quads, const vector<int>& ids) {
+    array_view<const vec4i> quads, array_view<const int> ids) {
     ungroup_elems(split_quads, quads, ids);
 }
 
@@ -504,28 +505,29 @@ void weld_quads(
 
 // Merge shape elements
 void merge_lines(
-    vector<vec2i>& lines, const vector<vec2i>& merge_lines, int num_verts) {
+    vector<vec2i>& lines, array_view<const vec2i> merge_lines, int num_verts) {
     for (auto& l : merge_lines)
         lines.push_back({l.x + num_verts, l.y + num_verts});
 }
 void merge_triangles(vector<vec3i>& triangles,
-    const vector<vec3i>& merge_triangles, int num_verts) {
+    array_view<const vec3i> merge_triangles, int num_verts) {
     for (auto& t : merge_triangles)
         triangles.push_back(
             {t.x + num_verts, t.y + num_verts, t.z + num_verts});
 }
 void merge_quads(
-    vector<vec4i>& quads, const vector<vec4i>& merge_quads, int num_verts) {
+    vector<vec4i>& quads, array_view<const vec4i> merge_quads, int num_verts) {
     for (auto& q : merge_quads)
         quads.push_back({q.x + num_verts, q.y + num_verts, q.z + num_verts,
             q.w + num_verts});
 }
 void merge_lines(vector<vec2i>& lines, vector<vec3f>& positions,
     vector<vec3f>& tangents, vector<vec2f>& texturecoords,
-    vector<float>& radius, const vector<vec2i>& merge_lines,
-    const vector<vec3f>& merge_positions, const vector<vec3f>& merge_tangents,
-    const vector<vec2f>& merge_texturecoords,
-    const vector<float>& merge_radius) {
+    vector<float>& radius, array_view<const vec2i> merge_lines,
+    array_view<const vec3f> merge_positions,
+    array_view<const vec3f> merge_tangents,
+    array_view<const vec2f> merge_texturecoords,
+    array_view<const float> merge_radius) {
     auto merge_verts = (int)positions.size();
     for (auto& l : merge_lines)
         lines.push_back({l.x + merge_verts, l.y + merge_verts});
@@ -539,9 +541,10 @@ void merge_lines(vector<vec2i>& lines, vector<vec3f>& positions,
 }
 void merge_triangles(vector<vec3i>& triangles, vector<vec3f>& positions,
     vector<vec3f>& normals, vector<vec2f>& texturecoords,
-    const vector<vec3i>& merge_triangles, const vector<vec3f>& merge_positions,
-    const vector<vec3f>& merge_normals,
-    const vector<vec2f>& merge_texturecoords) {
+    array_view<const vec3i> merge_triangles,
+    array_view<const vec3f> merge_positions,
+    array_view<const vec3f> merge_normals,
+    array_view<const vec2f> merge_texturecoords) {
     auto merge_verts = (int)positions.size();
     for (auto& t : merge_triangles)
         triangles.push_back(
@@ -554,9 +557,10 @@ void merge_triangles(vector<vec3i>& triangles, vector<vec3f>& positions,
 }
 void merge_quads(vector<vec4i>& quads, vector<vec3f>& positions,
     vector<vec3f>& normals, vector<vec2f>& texturecoords,
-    const vector<vec4i>& merge_quads, const vector<vec3f>& merge_positions,
-    const vector<vec3f>& merge_normals,
-    const vector<vec2f>& merge_texturecoords) {
+    array_view<const vec4i> merge_quads,
+    array_view<const vec3f> merge_positions,
+    array_view<const vec3f> merge_normals,
+    array_view<const vec2f> merge_texturecoords) {
     auto merge_verts = (int)positions.size();
     for (auto& q : merge_quads)
         quads.push_back({q.x + merge_verts, q.y + merge_verts,
@@ -621,7 +625,7 @@ void subdivide_triangles_impl(vector<vec3i>& triangles, vector<T>& vert) {
     if (triangles.empty() || vert.empty()) return;
     // get edges
     auto emap = edge_map{};
-    insert_edges(emap, triangles);
+    insert_triangles_edges(emap, triangles);
     auto edges = vector<vec2i>{};
     get_edges(emap, edges);
     // number of elements
@@ -673,7 +677,7 @@ void subdivide_quads_impl(vector<vec4i>& quads, vector<T>& vert) {
     if (quads.empty() || vert.empty()) return;
     // get edges
     auto emap = edge_map{};
-    insert_edges(emap, quads);
+    insert_quads_edges(emap, quads);
     auto edges = vector<vec2i>{};
     get_edges(emap, edges);
     // number of elements
@@ -794,7 +798,7 @@ void subdivide_catmullclark_impl(
     if (quads.empty() || vert.empty()) return;
     // get edges
     auto emap = edge_map{};
-    insert_edges(emap, quads);
+    insert_quads_edges(emap, quads);
     auto edges = vector<vec2i>{}, boundary = vector<vec2i>{};
     get_edges(emap, edges);
     get_boundary(emap, boundary);
@@ -1003,13 +1007,13 @@ void sample_points_element_cdf(vector<float>& cdf, int npoints) {
     cdf.resize(npoints);
     for (auto i = 0; i < cdf.size(); i++) cdf[i] = 1 + (i ? cdf[i - 1] : 0);
 }
-int sample_points_element(const vector<float>& cdf, float re) {
+int sample_points_element(array_view<const float> cdf, float re) {
     return sample_discrete_distribution(cdf, re);
 }
 
 // Pick a point on lines uniformly.
-void sample_lines_element_cdf(vector<float>& cdf, const vector<vec2i>& lines,
-    const vector<vec3f>& positions) {
+void sample_lines_element_cdf(vector<float>& cdf, array_view<const vec2i> lines,
+    array_view<const vec3f> positions) {
     cdf.resize(lines.size());
     for (auto i = 0; i < cdf.size(); i++) {
         auto l = lines[i];
@@ -1018,13 +1022,13 @@ void sample_lines_element_cdf(vector<float>& cdf, const vector<vec2i>& lines,
     }
 }
 pair<int, float> sample_lines_element(
-    const vector<float>& cdf, float re, float ru) {
+    array_view<const float> cdf, float re, float ru) {
     return {sample_discrete_distribution(cdf, re), ru};
 }
 
 // Pick a point on a triangle mesh uniformly.
 void sample_triangles_element_cdf(vector<float>& cdf,
-    const vector<vec3i>& triangles, const vector<vec3f>& positions) {
+    array_view<const vec3i> triangles, array_view<const vec3f> positions) {
     cdf.resize(triangles.size());
     for (auto i = 0; i < cdf.size(); i++) {
         auto t = triangles[i];
@@ -1033,14 +1037,14 @@ void sample_triangles_element_cdf(vector<float>& cdf,
     }
 }
 pair<int, vec2f> sample_triangles_element(
-    const vector<float>& cdf, float re, const vec2f& ruv) {
+    array_view<const float> cdf, float re, const vec2f& ruv) {
     return {sample_discrete_distribution(cdf, re),
         sample_triangle_coordinates(ruv)};
 }
 
 // Pick a point on a quad mesh uniformly.
-void sample_quads_element_cdf(vector<float>& cdf, const vector<vec4i>& quads,
-    const vector<vec3f>& positions) {
+void sample_quads_element_cdf(vector<float>& cdf, array_view<const vec4i> quads,
+    array_view<const vec3f> positions) {
     cdf.resize(quads.size());
     for (auto i = 0; i < cdf.size(); i++) {
         auto q = quads[i];
@@ -1050,11 +1054,11 @@ void sample_quads_element_cdf(vector<float>& cdf, const vector<vec4i>& quads,
     }
 }
 pair<int, vec2f> sample_quads_element(
-    const vector<float>& cdf, float re, const vec2f& ruv) {
+    array_view<const float> cdf, float re, const vec2f& ruv) {
     return {sample_discrete_distribution(cdf, re), ruv};
 }
-pair<int, vec2f> sample_quads_element(const vector<vec4i>& quads,
-    const vector<float>& cdf, float re, const vec2f& ruv) {
+pair<int, vec2f> sample_quads_element(array_view<const vec4i> quads,
+    array_view<const float> cdf, float re, const vec2f& ruv) {
     auto element_id = sample_discrete_distribution(cdf, re);
     if (quads[element_id].z == quads[element_id].w) {
         return {element_id, sample_triangle_coordinates(ruv)};
@@ -1068,8 +1072,8 @@ pair<int, vec2f> sample_quads_element(const vector<vec4i>& quads,
 // [0,1]^3. unorm and texcoord are optional.
 void sample_triangles_points(vector<vec3f>& sampled_positions,
     vector<vec3f>& sampled_normals, vector<vec2f>& sampled_texturecoords,
-    const vector<vec3i>& triangles, const vector<vec3f>& positions,
-    const vector<vec3f>& normals, const vector<vec2f>& texturecoords,
+    array_view<const vec3i> triangles, array_view<const vec3f> positions,
+    array_view<const vec3f> normals, array_view<const vec2f> texturecoords,
     int npoints, int seed) {
     sampled_positions.resize(npoints);
     sampled_normals.resize(npoints);
@@ -1105,8 +1109,8 @@ void sample_triangles_points(vector<vec3f>& sampled_positions,
 // [0,1]^3. unorm and texcoord are optional.
 void sample_quads_points(vector<vec3f>& sampled_positions,
     vector<vec3f>& sampled_normals, vector<vec2f>& sampled_texturecoords,
-    const vector<vec4i>& quads, const vector<vec3f>& positions,
-    const vector<vec3f>& normals, const vector<vec2f>& texturecoords,
+    array_view<const vec4i> quads, array_view<const vec3f> positions,
+    array_view<const vec3f> normals, array_view<const vec2f> texturecoords,
     int npoints, int seed) {
     sampled_positions.resize(npoints);
     sampled_normals.resize(npoints);
@@ -1165,14 +1169,14 @@ inline void add_undirected_arc(geodesic_solver& solver, int na, int nb) {
 }
 
 void make_edge_solver_slow(geodesic_solver& solver,
-    const vector<vec3i>& triangles, const vector<vec3f>& positions,
+    array_view<const vec3i> triangles, array_view<const vec3f> positions,
     bool use_steiner_points) {
     solver.graph.reserve(positions.size());
 
     for (int i = 0; i < positions.size(); i++) add_node(solver, positions[i]);
 
     auto emap = edge_map{};
-    insert_edges(emap, triangles);
+    insert_triangles_edges(emap, triangles);
     auto edges = vector<vec2i>{};
     get_edges(emap, edges);
     for (auto& edge : edges) {
@@ -1181,7 +1185,7 @@ void make_edge_solver_slow(geodesic_solver& solver,
 
     if (!use_steiner_points) return;
 
-    solver.graph.reserve(size(positions) + size(edges));
+    solver.graph.reserve(positions.size() + edges.size());
     auto steiner_per_edge = vector<int>(get_num_edges(emap));
 
     // On each edge, connect the mid vertex with the vertices on th same edge.
@@ -1249,11 +1253,11 @@ inline int get_edge_index(const geodesic_solver& solver, const vec2i& edge) {
 }
 
 void make_edge_solver_fast(geodesic_solver& solver,
-    const vector<vec3i>& triangles, const vector<vec3f>& positions,
+    array_view<const vec3i> triangles, array_view<const vec3f> positions,
     bool use_steiner_points) {
-    solver.positions = positions;
-    solver.graph.resize(size(positions));
-    solver.edge_index.resize(size(positions));
+    solver.positions = {positions.begin(), positions.end()};
+    solver.graph.resize(positions.size());
+    solver.edge_index.resize(positions.size());
 
     // fast construction assuming edges are not repeated
     for (auto t : triangles) {
@@ -1265,10 +1269,10 @@ void make_edge_solver_fast(geodesic_solver& solver,
     if (!use_steiner_points) return;
 
     auto edges = solver.edges;
-    solver.graph.resize(size(positions) + size(edges));
-    solver.edge_index.resize(size(positions) + size(edges));
-    solver.positions.resize(size(positions) + size(edges));
-    auto steiner_per_edge = vector<int>(size(edges));
+    solver.graph.resize(positions.size() + edges.size());
+    solver.edge_index.resize(positions.size() + edges.size());
+    solver.positions.resize(positions.size() + edges.size());
+    auto steiner_per_edge = vector<int>(edges.size());
 
     // On each edge, connect the mid vertex with the vertices on th same edge.
     auto edge_offset = (int)positions.size();
@@ -1333,14 +1337,14 @@ void update_edge_distances(geodesic_solver& solver) {
 }
 
 void init_geodesic_solver(geodesic_solver& solver,
-    const vector<vec3i>& triangles, const vector<vec3f>& positions) {
+    array_view<const vec3i> triangles, array_view<const vec3f> positions) {
     make_edge_solver_fast(solver, triangles, positions, true);
     // auto solver = make_edge_solver_slow(triangles, positions, true);
     log_geodesic_solver_stats(solver);
 }
 
 void compute_geodesic_distances(geodesic_solver& graph,
-    vector<float>& distances, const vector<int>& sources) {
+    vector<float>& distances, array_view<const int> sources) {
     // preallocated
     distances.resize(graph.positions.size());
     for (auto& d : distances) d = float_max;
@@ -1412,7 +1416,7 @@ void compute_geodesic_distances(geodesic_solver& graph,
 }
 
 void convert_distance_to_color(
-    vector<vec4f>& colors, const vector<float>& distances) {
+    vector<vec4f>& colors, array_view<const float> distances) {
     colors.resize(distances.size());
     for (auto idx = 0; idx < distances.size(); idx++) {
         auto distance = fmod(distances[idx] * 10, 1.0f);
@@ -2406,16 +2410,15 @@ void make_bezier_circle_shape(
 // Make a hair ball around a shape
 void make_hair_shape(vector<vec2i>& lines, vector<vec3f>& positions,
     vector<vec3f>& normals, vector<vec2f>& texturecoords, vector<float>& radius,
-    const vec2i& steps, const vector<vec3i>& striangles,
-    const vector<vec4i>& squads, const vector<vec3f>& spos,
-    const vector<vec3f>& snorm, const vector<vec2f>& stexcoord,
+    const vec2i& steps, array_view<const vec3i> striangles,
+    array_view<const vec4i> squads, array_view<const vec3f> spos,
+    array_view<const vec3f> snorm, array_view<const vec2f> stexcoord,
     const vec2f& len, const vec2f& rad, const vec2f& noise, const vec2f& clump,
     const vec2f& rotation, int seed) {
-    auto alltriangles    = striangles;
+    auto alltriangles    = vector<vec3i>{striangles.begin(), striangles.end()};
     auto quads_triangles = vector<vec3i>{};
     convert_quads_to_triangles(quads_triangles, squads);
-    alltriangles.insert(
-        alltriangles.end(), quads_triangles.begin(), quads_triangles.end());
+    for (auto t : quads_triangles) alltriangles.push_back(t);
     auto bpos      = vector<vec3f>{};
     auto bnorm     = vector<vec3f>{};
     auto btexcoord = vector<vec2f>{};
@@ -2467,7 +2470,7 @@ void make_hair_shape(vector<vec2i>& lines, vector<vec3f>& positions,
     }
 
     if (clump.x > 0 || noise.x > 0 || rotation.x > 0) {
-        compute_vertex_tangents(normals, lines, positions);
+        compute_lines_tangents(normals, lines, positions);
     }
 }
 

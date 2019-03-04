@@ -72,8 +72,9 @@ int main(int argc, char** argv) {
     if (geodesic_source >= 0) {
         auto solver = geodesic_solver{};
         init_geodesic_solver(solver, shape.triangles, shape.positions);
-        auto distances = vector<float>{};
-        compute_geodesic_distances(solver, distances, {geodesic_source});
+        auto distances = vector<float>(shape.positions.size());
+        compute_geodesic_distances(
+            solver, distances, array_view<const int>{&geodesic_source, 1});
         shape.colors = vector<vec4f>{};
         convert_distance_to_color(shape.colors, distances);
     }

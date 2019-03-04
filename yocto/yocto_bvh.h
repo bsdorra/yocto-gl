@@ -180,8 +180,8 @@ void init_lines_bvh(bvh_shape& bvh, array_view<const vec2i> lines,
     array_view<const vec3f> positions, array_view<const float> radius);
 void init_triangles_bvh(bvh_shape& bvh, array_view<const vec3i> triangles,
     array_view<const vec3f> positions);
-void init_quads_bvh(
-    bvh_shape& bvh, array_view<const vec4i> quads, array_view<const vec3f> positions);
+void init_quads_bvh(bvh_shape& bvh, array_view<const vec4i> quads,
+    array_view<const vec3f> positions);
 
 // Build a BVH from the given set of instances.
 void init_scene_bvh(bvh_scene& bvh, array_view<const bvh_instance> instances,

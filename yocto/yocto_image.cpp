@@ -57,7 +57,8 @@ image4f linear_to_gamma(image_view<const vec4f> lin, float gamma) {
 
 // Conversion between linear and gamma-encoded images.
 void srgb_to_linear(image_view<vec4f> lin, image_view<const vec4f> srgb) {
-    if (lin.imsize() != srgb.imsize()) throw out_of_range("different image sizes");
+    if (lin.imsize() != srgb.imsize())
+        throw out_of_range("different image sizes");
     for (auto j = 0; j < srgb.imsize().y; j++) {
         for (auto i = 0; i < srgb.imsize().x; i++) {
             lin[{i, j}] = srgb_to_linear(srgb[{i, j}]);
@@ -65,7 +66,8 @@ void srgb_to_linear(image_view<vec4f> lin, image_view<const vec4f> srgb) {
     }
 }
 void linear_to_srgb(image_view<vec4f> srgb, image_view<const vec4f> lin) {
-    if (lin.imsize() != srgb.imsize()) throw out_of_range("different image sizes");
+    if (lin.imsize() != srgb.imsize())
+        throw out_of_range("different image sizes");
     for (auto j = 0; j < srgb.imsize().y; j++) {
         for (auto i = 0; i < srgb.imsize().x; i++) {
             srgb[{i, j}] = linear_to_srgb(lin[{i, j}]);
@@ -73,7 +75,8 @@ void linear_to_srgb(image_view<vec4f> srgb, image_view<const vec4f> lin) {
     }
 }
 void srgb_to_linear(image_view<vec4f> lin, image_view<const vec4b> srgb) {
-    if (lin.imsize() != srgb.imsize()) throw out_of_range("different image sizes");
+    if (lin.imsize() != srgb.imsize())
+        throw out_of_range("different image sizes");
     for (auto j = 0; j < srgb.imsize().y; j++) {
         for (auto i = 0; i < srgb.imsize().x; i++) {
             lin[{i, j}] = srgb_to_linear(byte_to_float(srgb[{i, j}]));
@@ -81,7 +84,8 @@ void srgb_to_linear(image_view<vec4f> lin, image_view<const vec4b> srgb) {
     }
 }
 void linear_to_srgb(image_view<vec4b> srgb, image_view<const vec4f> lin) {
-    if (lin.imsize() != srgb.imsize()) throw out_of_range("different image sizes");
+    if (lin.imsize() != srgb.imsize())
+        throw out_of_range("different image sizes");
     for (auto j = 0; j < srgb.imsize().y; j++) {
         for (auto i = 0; i < srgb.imsize().x; i++) {
             srgb[{i, j}] = float_to_byte(linear_to_srgb(lin[{i, j}]));
@@ -108,18 +112,20 @@ void float_to_byte(image_view<vec4b> bt, image_view<const vec4f> fl) {
 }
 
 // Tonemap image
-void tonemap_image(
-    image_view<vec4f> ldr, image_view<const vec4f> hdr, float exposure, bool filmic, bool srgb) {
-    if (ldr.imsize() != hdr.imsize()) throw out_of_range("different image sizes");
+void tonemap_image(image_view<vec4f> ldr, image_view<const vec4f> hdr,
+    float exposure, bool filmic, bool srgb) {
+    if (ldr.imsize() != hdr.imsize())
+        throw out_of_range("different image sizes");
     for (auto j = 0; j < hdr.imsize().y; j++) {
         for (auto i = 0; i < hdr.imsize().x; i++) {
             ldr[{i, j}] = tonemap_filmic(hdr[{i, j}], exposure, filmic, srgb);
         }
     }
 }
-void tonemap_image(
-    image_view<vec4b> ldr, image_view<const vec4f> hdr, float exposure, bool filmic, bool srgb) {
-    if (ldr.imsize() != hdr.imsize()) throw out_of_range("different image sizes");
+void tonemap_image(image_view<vec4b> ldr, image_view<const vec4f> hdr,
+    float exposure, bool filmic, bool srgb) {
+    if (ldr.imsize() != hdr.imsize())
+        throw out_of_range("different image sizes");
     for (auto j = 0; j < hdr.imsize().y; j++) {
         for (auto i = 0; i < hdr.imsize().x; i++) {
             ldr[{i, j}] = float_to_byte(
@@ -262,7 +268,8 @@ void make_blackbodyramp_image(
 }
 
 // Comvert a bump map to a normal map.
-void bump_to_normal_map(image_view<vec4f> norm, image_view<const vec4f> img, float scale) {
+void bump_to_normal_map(
+    image_view<vec4f> norm, image_view<const vec4f> img, float scale) {
     if (img.imsize() != norm.imsize()) {
         throw std::out_of_range{"Images should be the same size"};
     }
@@ -504,8 +511,8 @@ image4f make_sunsky_image(int width, int height, float theta_sun,
 #endif
 
 // Make an image of multiple lights.
-void make_lights_image(image_view<vec4f> img, const vec3f& le, int nlights, float langle,
-    float lwidth, float lheight) {
+void make_lights_image(image_view<vec4f> img, const vec3f& le, int nlights,
+    float langle, float lwidth, float lheight) {
     for (auto j = 0; j < img.imsize().y / 2; j++) {
         auto theta = pif * ((j + 0.5f) / img.imsize().y);
         theta      = clamp(theta, 0.0f, pif / 2 - float_epsilon);
@@ -527,9 +534,9 @@ void make_noise_image(image_view<vec4f> img, float scale, bool wrap) {
     auto wrap3i = (wrap) ? vec3i{img.imsize().x, img.imsize().y, 2} : zero3i;
     for (auto j = 0; j < img.imsize().y; j++) {
         for (auto i = 0; i < img.imsize().x; i++) {
-            auto p =
-                vec3f{i / (float)img.imsize().x, j / (float)img.imsize().y, 0.5f} *
-                scale;
+            auto p = vec3f{i / (float)img.imsize().x, j / (float)img.imsize().y,
+                         0.5f} *
+                     scale;
             auto g      = perlin_noise(p, wrap3i);
             g           = clamp(0.5f + 0.5f * g, 0.0f, 1.0f);
             img[{i, j}] = {g, g, g, 1};
@@ -538,14 +545,14 @@ void make_noise_image(image_view<vec4f> img, float scale, bool wrap) {
 }
 
 // Make a noise image. Wrap works only if size is a power of two.
-void make_fbm_image(image_view<vec4f> img, float scale, float lacunarity, float gain,
-    int octaves, bool wrap) {
+void make_fbm_image(image_view<vec4f> img, float scale, float lacunarity,
+    float gain, int octaves, bool wrap) {
     auto wrap3i = (wrap) ? vec3i{img.imsize().x, img.imsize().y, 2} : zero3i;
     for (auto j = 0; j < img.imsize().y; j++) {
         for (auto i = 0; i < img.imsize().x; i++) {
-            auto p =
-                vec3f{i / (float)img.imsize().x, j / (float)img.imsize().y, 0.5f} *
-                scale;
+            auto p = vec3f{i / (float)img.imsize().x, j / (float)img.imsize().y,
+                         0.5f} *
+                     scale;
             auto g = perlin_fbm_noise(p, lacunarity, gain, octaves, wrap3i);
             g      = clamp(0.5f + 0.5f * g, 0.0f, 1.0f);
             img[{i, j}] = {g, g, g, 1};
@@ -554,14 +561,14 @@ void make_fbm_image(image_view<vec4f> img, float scale, float lacunarity, float 
 }
 
 // Make a noise image. Wrap works only if size is a power of two.
-void make_ridge_image(image_view<vec4f> img, float scale, float lacunarity, float gain,
-    float offset, int octaves, bool wrap) {
+void make_ridge_image(image_view<vec4f> img, float scale, float lacunarity,
+    float gain, float offset, int octaves, bool wrap) {
     auto wrap3i = (wrap) ? vec3i{img.imsize().x, img.imsize().y, 2} : zero3i;
     for (auto j = 0; j < img.imsize().y; j++) {
         for (auto i = 0; i < img.imsize().x; i++) {
-            auto p =
-                vec3f{i / (float)img.imsize().x, j / (float)img.imsize().y, 0.5f} *
-                scale;
+            auto p = vec3f{i / (float)img.imsize().x, j / (float)img.imsize().y,
+                         0.5f} *
+                     scale;
             auto g = perlin_ridge_noise(
                 p, lacunarity, gain, offset, octaves, wrap3i);
             g           = clamp(g, 0.0f, 1.0f);
@@ -576,9 +583,9 @@ void make_turbulence_image(image_view<vec4f> img, float scale, float lacunarity,
     auto wrap3i = (wrap) ? vec3i{img.imsize().x, img.imsize().y, 2} : zero3i;
     for (auto j = 0; j < img.imsize().y; j++) {
         for (auto i = 0; i < img.imsize().x; i++) {
-            auto p =
-                vec3f{i / (float)img.imsize().x, j / (float)img.imsize().y, 0.5f} *
-                scale;
+            auto p = vec3f{i / (float)img.imsize().x, j / (float)img.imsize().y,
+                         0.5f} *
+                     scale;
             auto g = perlin_turbulence_noise(
                 p, lacunarity, gain, octaves, wrap3i);
             g           = clamp(g, 0.0f, 1.0f);
@@ -592,13 +599,13 @@ void add_image_border(
     image_view<vec4f> img, int border_width, const vec4f& border_color) {
     for (auto j = 0; j < img.imsize().y; j++) {
         for (auto b = 0; b < border_width; b++) {
-            img[{b, j}]                    = border_color;
+            img[{b, j}]                      = border_color;
             img[{img.imsize().x - 1 - b, j}] = border_color;
         }
     }
     for (auto i = 0; i < img.imsize().x; i++) {
         for (auto b = 0; b < border_width; b++) {
-            img[{i, b}]                    = border_color;
+            img[{i, b}]                      = border_color;
             img[{i, img.imsize().y - 1 - b}] = border_color;
         }
     }
@@ -616,8 +623,8 @@ void make_test_volume(volume1f& vol, float scale, float exponent) {
     for (auto k = 0; k < vol.volsize().z; k++) {
         for (auto j = 0; j < vol.volsize().y; j++) {
             for (auto i = 0; i < vol.volsize().x; i++) {
-                auto p = vec3f{i / (float)vol.volsize().x, j / (float)vol.volsize().y,
-                    k / (float)vol.volsize().z};
+                auto p     = vec3f{i / (float)vol.volsize().x,
+                    j / (float)vol.volsize().y, k / (float)vol.volsize().z};
                 auto value = pow(
                     max(max(cos(scale * p.x), cos(scale * p.y)), 0.0f),
                     exponent);

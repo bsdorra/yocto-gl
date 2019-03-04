@@ -3747,7 +3747,8 @@ void read_value(input_file& fs, string& str) {
 template <typename T>
 void write_value(output_file& fs, const image<T>& img) {
     write_value(fs, img.imsize());
-    write_values(fs, img.data(), (size_t)img.imsize().x * (size_t)img.imsize().y);
+    write_values(
+        fs, img.data(), (size_t)img.imsize().x * (size_t)img.imsize().y);
 }
 template <typename T>
 void read_value(input_file& fs, image<T>& img) {
@@ -3762,7 +3763,8 @@ template <typename T>
 void write_value(output_file& fs, const volume<T>& vol) {
     write_value(fs, vol.volsize());
     write_values(fs, vol.data(),
-        (size_t)vol.volsize().x * (size_t)vol.volsize().y * (size_t)vol.volsize().z);
+        (size_t)vol.volsize().x * (size_t)vol.volsize().y *
+            (size_t)vol.volsize().z);
 }
 template <typename T>
 void read_value(input_file& fs, volume<T>& vol) {

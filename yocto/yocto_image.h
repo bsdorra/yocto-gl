@@ -98,7 +98,7 @@ template <typename T>
 struct image_view {
     // constructors
     image_view() : pixels{nullptr}, _size{0, 0} {}
-    image_view(T* pixels, const vec2i& size) : pixels{pixels}, _size{size} { }
+    image_view(T* pixels, const vec2i& size) : pixels{pixels}, _size{size} {}
 
     // size
     bool  empty() const { return _size.x == 0 || _size.y == 0; }
@@ -108,19 +108,19 @@ struct image_view {
     T& operator[](const vec2i& ij) { return pixels[ij.y * _size.x + ij.x]; }
 
     // data access
-    T*       data() { return pixels; }
+    T* data() { return pixels; }
 
     // iteration
-    T*       begin() { return pixels; }
-    T*       end() { return pixels + (size_t)_size.x * (size_t)_size.y; }
+    T* begin() { return pixels; }
+    T* end() { return pixels + (size_t)_size.x * (size_t)_size.y; }
 
-  private:
+   private:
     // data
-    T* pixels = nullptr;
-    vec2i     _size   = zero2i;
+    T*    pixels = nullptr;
+    vec2i _size  = zero2i;
 };
 
-}
+}  // namespace yocto
 
 // -----------------------------------------------------------------------------
 // IMAGE CONTAINER
@@ -137,10 +137,10 @@ struct image {
     image(const vec2i& size, const T* value)
         : _size{size}
         , _pixels{value, value + (size_t)size.x * (size_t)size.y} {}
-    
+
     // conversion to view
-    operator image_view<T>() { return {_pixels.data(), _size}; } 
-    operator image_view<const T>() const { return {_pixels.data(), _size}; } 
+    operator image_view<T>() { return {_pixels.data(), _size}; }
+    operator image_view<const T>() const { return {_pixels.data(), _size}; }
 
     // size
     bool  empty() const { return _pixels.empty(); }
@@ -158,8 +158,8 @@ struct image {
     }
 
     // data access
-    T*       data() { return _pixels.data(); }
-    const T* data() const { return _pixels.data(); }
+    T*               data() { return _pixels.data(); }
+    const T*         data() const { return _pixels.data(); }
     vector<T>&       data_vector() { return _pixels; }
     const vector<T>& data_vector() const { return _pixels; }
 
@@ -169,7 +169,7 @@ struct image {
     const T* begin() const { return _pixels.data(); }
     const T* end() const { return _pixels.data() + _pixels.size(); }
 
-  private:
+   private:
     // data
     vec2i     _size   = zero2i;
     vector<T> _pixels = {};
@@ -189,7 +189,7 @@ inline bool operator!=(const image<T>& a, const image<T>& b) {
     return a.imsize() != b.imsize() || a.data_vector() != b.data_vector();
 }
 
-}
+}  // namespace yocto
 
 // -----------------------------------------------------------------------------
 // IMAGE UTILITIES
@@ -223,19 +223,22 @@ void srgb_to_linear(image_view<vec4f> lin, image_view<const vec4b> srgb);
 void linear_to_srgb(image_view<vec4b> srgb, image_view<const vec4f> lin);
 
 // Conversion between linear and gamma-encoded images.
-void gamma_to_linear(image_view<vec4f> lin, image_view<const vec4f> srgb, float gamma);
-void linear_to_gamma(image_view<vec4f> srgb, image_view<const vec4f> lin, float gamma);
+void gamma_to_linear(
+    image_view<vec4f> lin, image_view<const vec4f> srgb, float gamma);
+void linear_to_gamma(
+    image_view<vec4f> srgb, image_view<const vec4f> lin, float gamma);
 
 // Apply exposure and filmic tone mapping
-void tonemap_image(
-    image_view<vec4f> ldr, image_view<const vec4f> hdr, float exposure, bool filmic, bool srgb);
-void tonemap_image(
-    image_view<vec4b> ldr, image_view<const vec4f> hdr, float exposure, bool filmic, bool srgb);
+void tonemap_image(image_view<vec4f> ldr, image_view<const vec4f> hdr,
+    float exposure, bool filmic, bool srgb);
+void tonemap_image(image_view<vec4b> ldr, image_view<const vec4f> hdr,
+    float exposure, bool filmic, bool srgb);
 void tonemap_image_region(image_view<vec4f> ldr, const image_region& region,
     image_view<const vec4f> hdr, float exposure, bool filmic, bool srgb);
 
 // Resize an image.
-void resize_image(image<vec4f>& res, image_view<const vec4f> img, const vec2i& size);
+void resize_image(
+    image<vec4f>& res, image_view<const vec4f> img, const vec2i& size);
 void resize_image(image_view<vec4f> res, image_view<const vec4f> img);
 
 }  // namespace yocto
@@ -254,25 +257,27 @@ void make_checker_image(image_view<vec4f> img, int tile = 8,
     const vec4f& c0 = {0.2f, 0.2f, 0.2f, 1},
     const vec4f& c1 = {0.5f, 0.5f, 0.5f, 1});
 void make_bumpdimple_image(image_view<vec4f> img, int tile = 8);
-void make_ramp_image(
-    image_view<vec4f> img, const vec4f& c0, const vec4f& c1, float srgb = false);
+void make_ramp_image(image_view<vec4f> img, const vec4f& c0, const vec4f& c1,
+    float srgb = false);
 void make_gammaramp_image(image_view<vec4f> img);
 void make_uvramp_image(image_view<vec4f> img);
-void make_uvgrid_image(image_view<vec4f> img, int tile = 8, bool colored = true);
-void make_blackbodyramp_image(image_view<vec4f> img, float start_temperature = 1000,
-    float end_temperature = 12000);
+void make_uvgrid_image(
+    image_view<vec4f> img, int tile = 8, bool colored = true);
+void make_blackbodyramp_image(image_view<vec4f> img,
+    float start_temperature = 1000, float end_temperature = 12000);
 
 // Comvert a bump map to a normal map. All linear color spaces.
-void bump_to_normal_map(image_view<vec4f> norm, image_view<const vec4f> img, float scale = 1);
+void bump_to_normal_map(
+    image_view<vec4f> norm, image_view<const vec4f> img, float scale = 1);
 
 // Make a sunsky HDR model with sun at sun_angle elevation in [0,pif/2],
 // turbidity in [1.7,10] with or without sun. The sun can be enabled or
 // disabled with has_sun. The sun parameters can be slightly modified by
 // changing the sun intensity and temperature. Has a convention, a temperature
 // of 0 sets the eath sun defaults (ignoring intensity too).
-void make_sunsky_image(image_view<vec4f> img, float sun_angle, float turbidity = 3,
-    bool has_sun = false, float sun_intensity = 1.0f, float sun_temperature = 0,
-    const vec3f& ground_albedo = {0.2f, 0.2f, 0.2f});
+void make_sunsky_image(image_view<vec4f> img, float sun_angle,
+    float turbidity = 3, bool has_sun = false, float sun_intensity = 1.0f,
+    float sun_temperature = 0, const vec3f& ground_albedo = {0.2f, 0.2f, 0.2f});
 // Make an image of multiple lights.
 void make_lights_image(image_view<vec4f> img, const vec3f& le = {1, 1, 1},
     int nlights = 4, float langle = pif / 4, float lwidth = pif / 16,
@@ -280,12 +285,13 @@ void make_lights_image(image_view<vec4f> img, const vec3f& le = {1, 1, 1},
 
 // Make a noise image. Wrap works only if both resx and resy are powers of two.
 void make_noise_image(image_view<vec4f> img, float scale = 1, bool wrap = true);
-void make_fbm_image(image_view<vec4f> img, float scale = 1, float lacunarity = 2,
-    float gain = 0.5f, int octaves = 6, bool wrap = true);
-void make_ridge_image(image_view<vec4f> img, float scale = 1, float lacunarity = 2,
-    float gain = 0.5f, float offset = 1.0f, int octaves = 6, bool wrap = true);
-void make_turbulence_image(image_view<vec4f> img, float scale = 1, float lacunarity = 2,
-    float gain = 0.5f, int octaves = 6, bool wrap = true);
+void make_fbm_image(image_view<vec4f> img, float scale = 1,
+    float lacunarity = 2, float gain = 0.5f, int octaves = 6, bool wrap = true);
+void make_ridge_image(image_view<vec4f> img, float scale = 1,
+    float lacunarity = 2, float gain = 0.5f, float offset = 1.0f,
+    int octaves = 6, bool wrap = true);
+void make_turbulence_image(image_view<vec4f> img, float scale = 1,
+    float lacunarity = 2, float gain = 0.5f, int octaves = 6, bool wrap = true);
 
 // Add a border to an image
 void add_image_border(image_view<vec4f> img, int border_width = 2,
@@ -329,8 +335,8 @@ struct volume {
     }
 
     // data access
-    T*       data() { return _voxels.data(); }
-    const T* data() const { return _voxels.data(); }
+    T*               data() { return _voxels.data(); }
+    const T*         data() const { return _voxels.data(); }
     vector<T>&       data_vector() { return _voxels; }
     const vector<T>& data_vector() const { return _voxels; }
 

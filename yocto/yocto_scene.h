@@ -459,8 +459,7 @@ float sample_environment_direction_pdf(const yocto_scene& scene,
 namespace yocto {
 
 // Find the first keyframe value that is greater than the argument.
-inline int evaluate_keyframed_index(
-    array_view<const float> times, float time);
+inline int evaluate_keyframed_index(array_view<const float> times, float time);
 
 // Evaluates a keyframed value using step interpolation.
 template <typename T>
@@ -490,8 +489,7 @@ inline T evaluate_keyframed_bezier(
 namespace yocto {
 
 // Find the first keyframe value that is greater than the argument.
-inline int evaluate_keyframed_index(
-    array_view<const float> times, float time) {
+inline int evaluate_keyframed_index(array_view<const float> times, float time) {
     for (auto i = 0; i < times.size(); i++)
         if (times[i] > time) return i;
     return (int)times.size();

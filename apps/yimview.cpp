@@ -265,8 +265,8 @@ void draw(const opengl_window& win) {
     set_opengl_viewport(fb_size);
     clear_opengl_lframebuffer(vec4f{0.15f, 0.15f, 0.15f, 1.0f});
     if (img.gl_txt) {
-        update_image_view(img.image_center, img.image_scale, img.display.imsize(),
-            win_size, img.zoom_to_fit);
+        update_image_view(img.image_center, img.image_scale,
+            img.display.imsize(), win_size, img.zoom_to_fit);
         draw_opengl_image_background(img.gl_txt, win_size.x, win_size.y,
             img.image_center, img.image_scale);
         set_opengl_blending(true);

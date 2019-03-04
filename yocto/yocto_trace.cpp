@@ -2037,8 +2037,8 @@ void trace_image_async_start(image_view<vec4f> image, trace_state& state,
     concurrent_queue<image_region>& queue, const trace_image_options& options) {
     auto& camera     = scene.cameras.at(options.camera_id);
     auto  image_size = get_camera_image_size(camera, options.image_size);
-    for(auto& p : image) p = zero4f;
-    state            = trace_state{};
+    for (auto& p : image) p = zero4f;
+    state = trace_state{};
     init_trace_state(state, image_size, options.random_seed);
     auto regions = vector<image_region>{};
     make_image_regions(regions, image.imsize(), options.region_size, true);

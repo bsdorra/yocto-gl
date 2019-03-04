@@ -328,7 +328,8 @@ void draw(const opengl_window& win) {
                     update_opengl_texture_region(
                         app.display_texture, app.display, region, false);
                     size += region.imsize().x * region.imsize().y;
-                    if (size >= app.image.imsize().x * app.image.imsize().y) break;
+                    if (size >= app.image.imsize().x * app.image.imsize().y)
+                        break;
                 }
             }
         }
@@ -421,8 +422,8 @@ void run_ui(app_state& app) {
         // selection
         if (app.load_done && (mouse_left || mouse_right) && alt_down &&
             !widgets_active) {
-            auto ij = get_image_coords(
-                mouse_pos, app.image_center, app.image_scale, app.image.imsize());
+            auto ij = get_image_coords(mouse_pos, app.image_center,
+                app.image_scale, app.image.imsize());
             if (ij.x < 0 || ij.x >= app.image.imsize().x || ij.y < 0 ||
                 ij.y >= app.image.imsize().y) {
                 auto& camera = app.scene.cameras.at(

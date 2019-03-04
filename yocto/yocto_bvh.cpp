@@ -1172,7 +1172,8 @@ void update_shape_bvh(bvh_shape& bvh, array_view<const vec3f> positions,
     bvh.positions = {positions.begin(), positions.end()};
     bvh.radius    = {radius.begin(), radius.end()};
 }
-void update_scene_bvh(bvh_scene& bvh, array_view<const bvh_instance> instances) {
+void update_scene_bvh(
+    bvh_scene& bvh, array_view<const bvh_instance> instances) {
     bvh.instances = {instances.begin(), instances.end()};
 }
 bvh_shape& get_shape_bvh(bvh_scene& bvh, int shape_id) {

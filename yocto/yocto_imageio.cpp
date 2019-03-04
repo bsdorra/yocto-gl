@@ -299,8 +299,8 @@ void save_png_image(const string& filename, image_view<const vec4b> img) {
     }
 }
 void save_jpg_image(const string& filename, image_view<const vec4b> img) {
-    if (!stbi_write_jpg(
-            filename.c_str(), img.imsize().x, img.imsize().y, 4, img.data(), 75)) {
+    if (!stbi_write_jpg(filename.c_str(), img.imsize().x, img.imsize().y, 4,
+            img.data(), 75)) {
         throw imageio_error("error saving image " + filename);
     }
 }
@@ -589,21 +589,24 @@ void save_tonemapped_image(const string& filename, image_view<const vec4f> hdr,
 
 // Resize image.
 void resize_image(image_view<vec4f> res_img, image_view<const vec4f> img) {
-    stbir_resize_float_generic((float*)img.data(), img.imsize().x, img.imsize().y,
-        sizeof(vec4f) * img.imsize().x, (float*)res_img.data(), res_img.imsize().x,
-        res_img.imsize().y, sizeof(vec4f) * res_img.imsize().x, 4, 3, 0,
-        STBIR_EDGE_CLAMP, STBIR_FILTER_DEFAULT, STBIR_COLORSPACE_LINEAR,
-        nullptr);
+    stbir_resize_float_generic((float*)img.data(), img.imsize().x,
+        img.imsize().y, sizeof(vec4f) * img.imsize().x, (float*)res_img.data(),
+        res_img.imsize().x, res_img.imsize().y,
+        sizeof(vec4f) * res_img.imsize().x, 4, 3, 0, STBIR_EDGE_CLAMP,
+        STBIR_FILTER_DEFAULT, STBIR_COLORSPACE_LINEAR, nullptr);
 }
-void resize_image(image4f& res_img, image_view<const vec4f> img, const vec2i& size_) {
+void resize_image(
+    image4f& res_img, image_view<const vec4f> img, const vec2i& size_) {
     auto size = size_;
     if (size == zero2i) {
         throw std::invalid_argument("bad image size in resize_image");
     }
     if (size.y == 0) {
-        size.y = (int)round(size.x * (float)img.imsize().y / (float)img.imsize().x);
+        size.y = (int)round(
+            size.x * (float)img.imsize().y / (float)img.imsize().x);
     } else if (size.x == 0) {
-        size.x = (int)round(size.y * (float)img.imsize().x / (float)img.imsize().y);
+        size.x = (int)round(
+            size.y * (float)img.imsize().x / (float)img.imsize().y);
     }
     res_img = {size};
     resize_image(res_img, img);
@@ -767,8 +770,8 @@ void load_volume(const string& filename, volume1f& vol) {
 
 // Saves volume data in binary format.
 void save_volume(const string& filename, const volume1f& vol) {
-    if (!save_yvol(filename.c_str(), vol.volsize().x, vol.volsize().y, vol.volsize().z,
-            1, vol.data())) {
+    if (!save_yvol(filename.c_str(), vol.volsize().x, vol.volsize().y,
+            vol.volsize().z, 1, vol.data())) {
         throw imageio_error("error saving volume " + filename);
     }
 }

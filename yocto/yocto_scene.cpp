@@ -203,15 +203,18 @@ void update_transforms(yocto_scene& scene, yocto_animation& animation,
         switch (animation.interpolation_type) {
             case yocto_interpolation_type::step:
                 value = evaluate_keyframed_step(animation.keyframes_times,
-                    (array_view<const vec3f>)animation.translation_keyframes, time);
+                    (array_view<const vec3f>)animation.translation_keyframes,
+                    time);
                 break;
             case yocto_interpolation_type::linear:
                 value = evaluate_keyframed_linear(animation.keyframes_times,
-                    (array_view<const vec3f>)animation.translation_keyframes, time);
+                    (array_view<const vec3f>)animation.translation_keyframes,
+                    time);
                 break;
             case yocto_interpolation_type::bezier:
                 value = evaluate_keyframed_bezier(animation.keyframes_times,
-                    (array_view<const vec3f>)animation.translation_keyframes, time);
+                    (array_view<const vec3f>)animation.translation_keyframes,
+                    time);
                 break;
             default: throw runtime_error("should not have been here");
         }
@@ -223,15 +226,18 @@ void update_transforms(yocto_scene& scene, yocto_animation& animation,
         switch (animation.interpolation_type) {
             case yocto_interpolation_type::step:
                 value = evaluate_keyframed_step(animation.keyframes_times,
-                    (array_view<const vec4f>)animation.rotation_keyframes, time);
+                    (array_view<const vec4f>)animation.rotation_keyframes,
+                    time);
                 break;
             case yocto_interpolation_type::linear:
                 value = evaluate_keyframed_linear(animation.keyframes_times,
-                    (array_view<const vec4f>)animation.rotation_keyframes, time);
+                    (array_view<const vec4f>)animation.rotation_keyframes,
+                    time);
                 break;
             case yocto_interpolation_type::bezier:
                 value = evaluate_keyframed_bezier(animation.keyframes_times,
-                    (array_view<const vec4f>)animation.rotation_keyframes, time);
+                    (array_view<const vec4f>)animation.rotation_keyframes,
+                    time);
                 break;
         }
         for (auto target : animation.node_targets)
@@ -241,16 +247,16 @@ void update_transforms(yocto_scene& scene, yocto_animation& animation,
         auto value = vec3f{1, 1, 1};
         switch (animation.interpolation_type) {
             case yocto_interpolation_type::step:
-                value = evaluate_keyframed_step(
-                    animation.keyframes_times, (array_view<const vec3f>)animation.scale_keyframes, time);
+                value = evaluate_keyframed_step(animation.keyframes_times,
+                    (array_view<const vec3f>)animation.scale_keyframes, time);
                 break;
             case yocto_interpolation_type::linear:
-                value = evaluate_keyframed_linear(
-                    animation.keyframes_times, (array_view<const vec3f>)animation.scale_keyframes, time);
+                value = evaluate_keyframed_linear(animation.keyframes_times,
+                    (array_view<const vec3f>)animation.scale_keyframes, time);
                 break;
             case yocto_interpolation_type::bezier:
-                value = evaluate_keyframed_bezier(
-                    animation.keyframes_times, (array_view<const vec3f>)animation.scale_keyframes, time);
+                value = evaluate_keyframed_bezier(animation.keyframes_times,
+                    (array_view<const vec3f>)animation.scale_keyframes, time);
                 break;
         }
         for (auto target : animation.node_targets)
@@ -417,9 +423,11 @@ void build_scene_bvh(const yocto_scene& scene, bvh_scene& bvh,
         // make bvh
         auto shape_bvh = bvh_shape{};
         if (!shape.points.empty()) {
-            init_points_bvh(shape_bvh, shape.points, shape.positions, shape.radius);
+            init_points_bvh(
+                shape_bvh, shape.points, shape.positions, shape.radius);
         } else if (!shape.lines.empty()) {
-            init_lines_bvh(shape_bvh, shape.lines, shape.positions, shape.radius);
+            init_lines_bvh(
+                shape_bvh, shape.lines, shape.positions, shape.radius);
         } else if (!shape.triangles.empty()) {
             init_triangles_bvh(shape_bvh, shape.triangles, shape.positions);
         } else if (!shape.quads.empty()) {
@@ -1413,8 +1421,10 @@ string print_scene_stats(const yocto_scene& scene) {
                    vert_tangsp * sizeof(vec4f) + vert_radius * sizeof(float);
 
     for (auto& texture : scene.textures) {
-        texel_hdr += texture.hdr_image.imsize().x * texture.hdr_image.imsize().y;
-        texel_ldr += texture.ldr_image.imsize().x * texture.ldr_image.imsize().y;
+        texel_hdr += texture.hdr_image.imsize().x *
+                     texture.hdr_image.imsize().y;
+        texel_ldr += texture.ldr_image.imsize().x *
+                     texture.ldr_image.imsize().y;
     }
     memory_imgs = texel_hdr * sizeof(vec4f) + texel_ldr * sizeof(vec4b);
 

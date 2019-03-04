@@ -12,7 +12,7 @@
 // ## Array view
 //
 // `array_view` is a non owning view over a contiguos sequence of elements.
-// it is very similar to `std::span` and in fact it will be eventually 
+// it is very similar to `std::span` and in fact it will be eventually
 // substituted to that one when span will become readily available.
 // It is used through Yocto/GL to pass arrays as pointer and length pairs.
 //
@@ -132,28 +132,30 @@ using namespace std::chrono_literals;
 // -----------------------------------------------------------------------------
 namespace yocto {
 
-// Array view, similar to std::span for C++20. Wraps a pointer length and 
+// Array view, similar to std::span for C++20. Wraps a pointer length and
 // provides a vector like interface.
-template<typename T>
+template <typename T>
 struct array_view {
     // constructors
-    constexpr array_view() : ptr{nullptr}, count{0} { }
-    constexpr array_view(T* data, size_t count) : ptr{data}, count{count} { }
+    constexpr array_view() : ptr{nullptr}, count{0} {}
+    constexpr array_view(T* data, size_t count) : ptr{data}, count{count} {}
     // template<typename U, typename = std::enable_if<std::is_const<T>>::value>>
-    // constexpr array_view(vector<U>& data) : ptr{data.data()}, count{data.size()} { }
-    template<typename U, typename _ = std::enable_if_t<std::is_const_v<T>>>
-    constexpr array_view(const vector<U>& data) : ptr{data.data()}, count{data.size()} { }
+    // constexpr array_view(vector<U>& data) : ptr{data.data()},
+    // count{data.size()} { }
+    template <typename U, typename _ = std::enable_if_t<std::is_const_v<T>>>
+    constexpr array_view(const vector<U>& data)
+        : ptr{data.data()}, count{data.size()} {}
 
     // size
-    constexpr bool empty() const { return count == 0; }
-    constexpr size_t size() const { return count; }
+    constexpr bool      empty() const { return count == 0; }
+    constexpr size_t    size() const { return count; }
     constexpr ptrdiff_t ssize() const { return (ptrdiff_t)count; }
 
     // element access
     constexpr T& operator[](size_t i) const { return ptr[i]; }
     constexpr T& at(size_t i) { return ptr[i]; }
     constexpr T& front() const { return ptr[0]; }
-    constexpr T& back() const { return ptr[count-1]; }
+    constexpr T& back() const { return ptr[count - 1]; }
 
     // data access
     constexpr T* data() const { return ptr; }
@@ -162,12 +164,12 @@ struct array_view {
     constexpr T* begin() const { return ptr; }
     constexpr T* end() const { return ptr + count; }
 
-  private:
-    T* ptr = nullptr;
+   private:
+    T*     ptr   = nullptr;
     size_t count = 0;
 };
 
-}
+}  // namespace yocto
 
 // -----------------------------------------------------------------------------
 // PYTHON-LIKE ITERATORS

@@ -460,27 +460,27 @@ namespace yocto {
 
 // Find the first keyframe value that is greater than the argument.
 inline int evaluate_keyframed_index(
-    const vector<float>& times, const float& time);
+    array_view<const float> times, float time);
 
 // Evaluates a keyframed value using step interpolation.
 template <typename T>
 inline T evaluate_keyframed_step(
-    const vector<float>& times, const vector<T>& vals, float time);
+    array_view<const float> times, array_view<const T> vals, float time);
 
 // Evaluates a keyframed value using linear interpolation.
 template <typename T>
 inline vec4f evaluate_keyframed_slerp(
-    const vector<float>& times, const vector<vec4f>& vals, float time);
+    array_view<const float> times, array_view<const T> vals, float time);
 
 // Evaluates a keyframed value using linear interpolation.
 template <typename T>
 inline T evaluate_keyframed_linear(
-    const vector<float>& times, const vector<T>& vals, float time);
+    array_view<const float> times, array_view<const T> vals, float time);
 
 // Evaluates a keyframed value using Bezier interpolation.
 template <typename T>
 inline T evaluate_keyframed_bezier(
-    const vector<float>& times, const vector<T>& vals, float time);
+    array_view<const float> times, array_view<const T> vals, float time);
 
 }  // namespace yocto
 
@@ -491,7 +491,7 @@ namespace yocto {
 
 // Find the first keyframe value that is greater than the argument.
 inline int evaluate_keyframed_index(
-    const vector<float>& times, const float& time) {
+    array_view<const float> times, float time) {
     for (auto i = 0; i < times.size(); i++)
         if (times[i] > time) return i;
     return (int)times.size();
@@ -500,7 +500,7 @@ inline int evaluate_keyframed_index(
 // Evaluates a keyframed value using step interpolation.
 template <typename T>
 inline T evaluate_keyframed_step(
-    const vector<float>& times, const vector<T>& vals, float time) {
+    array_view<const float> times, array_view<const T> vals, float time) {
     if (time <= times.front()) return vals.front();
     if (time >= times.back()) return vals.back();
     time     = clamp(time, times.front(), times.back() - 0.001f);
@@ -511,7 +511,7 @@ inline T evaluate_keyframed_step(
 // Evaluates a keyframed value using linear interpolation.
 template <typename T>
 inline vec4f evaluate_keyframed_slerp(
-    const vector<float>& times, const vector<vec4f>& vals, float time) {
+    array_view<const float> times, array_view<const T> vals, float time) {
     if (time <= times.front()) return vals.front();
     if (time >= times.back()) return vals.back();
     time     = clamp(time, times.front(), times.back() - 0.001f);
@@ -523,7 +523,7 @@ inline vec4f evaluate_keyframed_slerp(
 // Evaluates a keyframed value using linear interpolation.
 template <typename T>
 inline T evaluate_keyframed_linear(
-    const vector<float>& times, const vector<T>& vals, float time) {
+    array_view<const float> times, array_view<const T> vals, float time) {
     if (time <= times.front()) return vals.front();
     if (time >= times.back()) return vals.back();
     time     = clamp(time, times.front(), times.back() - 0.001f);
@@ -535,7 +535,7 @@ inline T evaluate_keyframed_linear(
 // Evaluates a keyframed value using Bezier interpolation.
 template <typename T>
 inline T evaluate_keyframed_bezier(
-    const vector<float>& times, const vector<T>& vals, float time) {
+    array_view<const float> times, array_view<const T> vals, float time) {
     if (time <= times.front()) return vals.front();
     if (time >= times.back()) return vals.back();
     time     = clamp(time, times.front(), times.back() - 0.001f);

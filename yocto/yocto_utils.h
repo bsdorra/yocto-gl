@@ -152,6 +152,8 @@ struct array_view {
     // element access
     constexpr T& operator[](size_t i) const { return ptr[i]; }
     constexpr T& at(size_t i) { return ptr[i]; }
+    constexpr T& front() const { return ptr[0]; }
+    constexpr T& back() const { return ptr[count-1]; }
 
     // data access
     constexpr T* data() const { return ptr; }

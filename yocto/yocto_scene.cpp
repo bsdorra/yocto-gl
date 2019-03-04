@@ -203,15 +203,15 @@ void update_transforms(yocto_scene& scene, yocto_animation& animation,
         switch (animation.interpolation_type) {
             case yocto_interpolation_type::step:
                 value = evaluate_keyframed_step(animation.keyframes_times,
-                    animation.translation_keyframes, time);
+                    (array_view<const vec3f>)animation.translation_keyframes, time);
                 break;
             case yocto_interpolation_type::linear:
                 value = evaluate_keyframed_linear(animation.keyframes_times,
-                    animation.translation_keyframes, time);
+                    (array_view<const vec3f>)animation.translation_keyframes, time);
                 break;
             case yocto_interpolation_type::bezier:
                 value = evaluate_keyframed_bezier(animation.keyframes_times,
-                    animation.translation_keyframes, time);
+                    (array_view<const vec3f>)animation.translation_keyframes, time);
                 break;
             default: throw runtime_error("should not have been here");
         }
@@ -223,15 +223,15 @@ void update_transforms(yocto_scene& scene, yocto_animation& animation,
         switch (animation.interpolation_type) {
             case yocto_interpolation_type::step:
                 value = evaluate_keyframed_step(animation.keyframes_times,
-                    animation.rotation_keyframes, time);
+                    (array_view<const vec4f>)animation.rotation_keyframes, time);
                 break;
             case yocto_interpolation_type::linear:
                 value = evaluate_keyframed_linear(animation.keyframes_times,
-                    animation.rotation_keyframes, time);
+                    (array_view<const vec4f>)animation.rotation_keyframes, time);
                 break;
             case yocto_interpolation_type::bezier:
                 value = evaluate_keyframed_bezier(animation.keyframes_times,
-                    animation.rotation_keyframes, time);
+                    (array_view<const vec4f>)animation.rotation_keyframes, time);
                 break;
         }
         for (auto target : animation.node_targets)
@@ -242,15 +242,15 @@ void update_transforms(yocto_scene& scene, yocto_animation& animation,
         switch (animation.interpolation_type) {
             case yocto_interpolation_type::step:
                 value = evaluate_keyframed_step(
-                    animation.keyframes_times, animation.scale_keyframes, time);
+                    animation.keyframes_times, (array_view<const vec3f>)animation.scale_keyframes, time);
                 break;
             case yocto_interpolation_type::linear:
                 value = evaluate_keyframed_linear(
-                    animation.keyframes_times, animation.scale_keyframes, time);
+                    animation.keyframes_times, (array_view<const vec3f>)animation.scale_keyframes, time);
                 break;
             case yocto_interpolation_type::bezier:
                 value = evaluate_keyframed_bezier(
-                    animation.keyframes_times, animation.scale_keyframes, time);
+                    animation.keyframes_times, (array_view<const vec3f>)animation.scale_keyframes, time);
                 break;
         }
         for (auto target : animation.node_targets)

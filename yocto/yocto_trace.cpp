@@ -1926,7 +1926,7 @@ void trace_image_region(image4f& image, trace_state& state,
             for (auto s = 0; s < num_samples; s++) {
                 if (options.cancel_flag && *options.cancel_flag) return;
                 _trace_npaths += 1;
-                auto ray = sample_camera_ray(camera, {i, j}, image.size(),
+                auto ray = sample_camera_ray(camera, {i, j}, image.imsize(),
                     get_random_vec2f(pixel.rng), get_random_vec2f(pixel.rng));
                 auto [radiance, hit] = sampler(scene, bvh, lights, ray.o, ray.d,
                     pixel.rng, options.max_bounces,
@@ -2002,7 +2002,7 @@ image4f trace_image(const yocto_scene& scene, const bvh_scene& bvh,
     auto state = trace_state{};
     init_trace_state(state, image_size, options.random_seed);
     auto regions = vector<image_region>{};
-    make_image_regions(regions, image.size(), options.region_size, true);
+    make_image_regions(regions, image.imsize(), options.region_size, true);
 
     parallel_foreach(regions, [&image, &state, &scene, &bvh, &lights, &options](
                                   const image_region& region) {
@@ -2018,7 +2018,7 @@ int trace_image_samples(image4f& image, trace_state& state,
     const yocto_scene& scene, const bvh_scene& bvh, const trace_lights& lights,
     int current_sample, const trace_image_options& options) {
     auto regions = vector<image_region>{};
-    make_image_regions(regions, image.size(), options.region_size, true);
+    make_image_regions(regions, image.imsize(), options.region_size, true);
     auto num_samples = min(
         options.samples_per_batch, options.num_samples - current_sample);
     parallel_foreach(
@@ -2041,7 +2041,7 @@ void trace_image_async_start(image4f& image, trace_state& state,
     state            = trace_state{};
     init_trace_state(state, image_size, options.random_seed);
     auto regions = vector<image_region>{};
-    make_image_regions(regions, image.size(), options.region_size, true);
+    make_image_regions(regions, image.imsize(), options.region_size, true);
     if (options.cancel_flag) *options.cancel_flag = false;
 
     futures.clear();

@@ -178,7 +178,7 @@ void update_opengl_texture(
     opengl_texture& texture, const image4f& img, bool mipmap) {
     assert(glGetError() == GL_NO_ERROR);
     glBindTexture(GL_TEXTURE_2D, texture.texture_id);
-    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, img.size().x, img.size().y, GL_RGBA,
+    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, img.imsize().x, img.imsize().y, GL_RGBA,
         GL_FLOAT, img.data());
     if (mipmap) glGenerateMipmap(GL_TEXTURE_2D);
     assert(glGetError() == GL_NO_ERROR);
@@ -189,9 +189,9 @@ void update_opengl_texture_region(opengl_texture& texture, const image4f& img,
     assert(glGetError() == GL_NO_ERROR);
     glBindTexture(GL_TEXTURE_2D, texture.texture_id);
     auto clipped = image4f{};
-    get_image_region(clipped, img, region);
+    get_image_region(clipped, (image_view<const vec4f>)img, region);
     glTexSubImage2D(GL_TEXTURE_2D, 0, region.min.x, region.min.y,
-        region.size().x, region.size().y, GL_RGBA, GL_FLOAT, clipped.data());
+        region.imsize().x, region.imsize().y, GL_RGBA, GL_FLOAT, clipped.data());
     if (mipmap) glGenerateMipmap(GL_TEXTURE_2D);
     assert(glGetError() == GL_NO_ERROR);
 }
@@ -200,7 +200,7 @@ void update_opengl_texture(
     opengl_texture& texture, const image4b& img, bool mipmap) {
     assert(glGetError() == GL_NO_ERROR);
     glBindTexture(GL_TEXTURE_2D, texture.texture_id);
-    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, img.size().x, img.size().y, GL_RGBA,
+    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, img.imsize().x, img.imsize().y, GL_RGBA,
         GL_UNSIGNED_BYTE, img.data());
     if (mipmap) glGenerateMipmap(GL_TEXTURE_2D);
     assert(glGetError() == GL_NO_ERROR);
@@ -211,9 +211,9 @@ void update_opengl_texture_region(opengl_texture& texture, const image4b& img,
     assert(glGetError() == GL_NO_ERROR);
     glBindTexture(GL_TEXTURE_2D, texture.texture_id);
     auto clipped = image4b{};
-    get_image_region(clipped, img, region);
+    get_image_region(clipped, (image_view<const vec4b>)img, region);
     glTexSubImage2D(GL_TEXTURE_2D, 0, region.min.x, region.min.y,
-        region.size().x, region.size().y, GL_RGBA, GL_UNSIGNED_BYTE,
+        region.imsize().x, region.imsize().y, GL_RGBA, GL_UNSIGNED_BYTE,
         clipped.data());
     if (mipmap) glGenerateMipmap(GL_TEXTURE_2D);
     assert(glGetError() == GL_NO_ERROR);

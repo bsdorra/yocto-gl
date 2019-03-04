@@ -245,7 +245,7 @@ void load_pfm_image(const string& filename, image4f& img) {
     delete[] pixels;
 }
 void save_pfm_image(const string& filename, const image4f& img) {
-    if (!save_pfm(filename.c_str(), img.size().x, img.size().y, 4,
+    if (!save_pfm(filename.c_str(), img.imsize().x, img.imsize().y, 4,
             (float*)img.data())) {
         throw imageio_error("error saving image " + filename);
     }
@@ -265,7 +265,7 @@ void load_exr_image(const string& filename, image4f& img) {
     free(pixels);
 }
 void save_exr_image(const string& filename, const image4f& img) {
-    if (!SaveEXR((float*)img.data(), img.size().x, img.size().y, 4,
+    if (!SaveEXR((float*)img.data(), img.imsize().x, img.imsize().y, 4,
             filename.c_str())) {
         throw imageio_error("error saving image " + filename);
     }
@@ -293,31 +293,31 @@ void load_stb_image(const string& filename, image4f& img) {
 
 // save an image with stbi
 void save_png_image(const string& filename, const image4b& img) {
-    if (!stbi_write_png(filename.c_str(), img.size().x, img.size().y, 4,
-            img.data(), img.size().x * 4)) {
+    if (!stbi_write_png(filename.c_str(), img.imsize().x, img.imsize().y, 4,
+            img.data(), img.imsize().x * 4)) {
         throw imageio_error("error saving image " + filename);
     }
 }
 void save_jpg_image(const string& filename, const image4b& img) {
     if (!stbi_write_jpg(
-            filename.c_str(), img.size().x, img.size().y, 4, img.data(), 75)) {
+            filename.c_str(), img.imsize().x, img.imsize().y, 4, img.data(), 75)) {
         throw imageio_error("error saving image " + filename);
     }
 }
 void save_tga_image(const string& filename, const image4b& img) {
     if (!stbi_write_tga(
-            filename.c_str(), img.size().x, img.size().y, 4, img.data())) {
+            filename.c_str(), img.imsize().x, img.imsize().y, 4, img.data())) {
         throw imageio_error("error saving image " + filename);
     }
 }
 void save_bmp_image(const string& filename, const image4b& img) {
     if (!stbi_write_bmp(
-            filename.c_str(), img.size().x, img.size().y, 4, img.data())) {
+            filename.c_str(), img.imsize().x, img.imsize().y, 4, img.data())) {
         throw imageio_error("error saving image " + filename);
     }
 }
 void save_hdr_image(const string& filename, const image4f& img) {
-    if (!stbi_write_hdr(filename.c_str(), img.size().x, img.size().y, 4,
+    if (!stbi_write_hdr(filename.c_str(), img.imsize().x, img.imsize().y, 4,
             (float*)img.data())) {
         throw imageio_error("error saving image " + filename);
     }
@@ -447,22 +447,22 @@ void load_image(const string& filename, image4f& img) {
     } else if (ext == "png" || ext == "PNG") {
         auto img8 = image4b{};
         load_stb_image(filename, img8);
-        img.resize(img8.size());
+        img.resize(img8.imsize());
         srgb_to_linear(img, img8);
     } else if (ext == "jpg" || ext == "JPG") {
         auto img8 = image4b{};
         load_stb_image(filename, img8);
-        img.resize(img8.size());
+        img.resize(img8.imsize());
         srgb_to_linear(img, img8);
     } else if (ext == "tga" || ext == "TGA") {
         auto img8 = image4b{};
         load_stb_image(filename, img8);
-        img.resize(img8.size());
+        img.resize(img8.imsize());
         srgb_to_linear(img, img8);
     } else if (ext == "bmp" || ext == "BMP") {
         auto img8 = image4b{};
         load_stb_image(filename, img8);
-        img.resize(img8.size());
+        img.resize(img8.imsize());
         srgb_to_linear(img, img8);
     } else if (ext == "json" || ext == "JSON") {
         load_json_image(filename, img);
@@ -475,23 +475,23 @@ void load_image(const string& filename, image4f& img) {
 void save_image(const string& filename, const image4f& img) {
     auto ext = get_extension(filename);
     if (ext == "png" || ext == "PNG") {
-        auto img8 = image4b{img.size()};
+        auto img8 = image4b{img.imsize()};
         linear_to_srgb(img8, img);
         save_png_image(filename, img8);
     } else if (ext == "jpg" || ext == "JPG") {
-        auto img8 = image4b{img.size()};
+        auto img8 = image4b{img.imsize()};
         linear_to_srgb(img8, img);
         save_jpg_image(filename, img8);
     } else if (ext == "tga" || ext == "TGA") {
-        auto img8 = image4b{img.size()};
+        auto img8 = image4b{img.imsize()};
         linear_to_srgb(img8, img);
         save_tga_image(filename, img8);
     } else if (ext == "bmp" || ext == "BMP") {
-        auto img8 = image4b{img.size()};
+        auto img8 = image4b{img.imsize()};
         linear_to_srgb(img8, img);
         save_bmp_image(filename, img8);
     } else if (ext == "hdr" || ext == "HDR") {
-        auto img8 = image4b{img.size()};
+        auto img8 = image4b{img.imsize()};
         linear_to_srgb(img8, img);
         save_hdr_image(filename, img);
     } else if (ext == "pfm" || ext == "PFM") {
@@ -514,17 +514,17 @@ void load_image(const string& filename, image4b& img) {
     if (ext == "exr" || ext == "EXR") {
         auto imgf = image4f{};
         load_exr_image(filename, imgf);
-        img.resize(imgf.size());
+        img.resize(imgf.imsize());
         linear_to_srgb(img, imgf);
     } else if (ext == "pfm" || ext == "PFM") {
         auto imgf = image4f{};
         load_pfm_image(filename, imgf);
-        img.resize(imgf.size());
+        img.resize(imgf.imsize());
         linear_to_srgb(img, imgf);
     } else if (ext == "hdr" || ext == "HDR") {
         auto imgf = image4f{};
         load_stb_image(filename, imgf);
-        img.resize(imgf.size());
+        img.resize(imgf.imsize());
         linear_to_srgb(img, imgf);
     } else if (ext == "png" || ext == "PNG") {
         load_stb_image(filename, img);
@@ -553,15 +553,15 @@ void save_image(const string& filename, const image4b& img) {
     } else if (ext == "bmp" || ext == "BMP") {
         save_bmp_image(filename, img);
     } else if (ext == "hdr" || ext == "HDR") {
-        auto imgf = image4f{img.size()};
+        auto imgf = image4f{img.imsize()};
         srgb_to_linear(imgf, img);
         save_hdr_image(filename, imgf);
     } else if (ext == "pfm" || ext == "PFM") {
-        auto imgf = image4f{img.size()};
+        auto imgf = image4f{img.imsize()};
         srgb_to_linear(imgf, img);
         save_pfm_image(filename, imgf);
     } else if (ext == "exr" || ext == "EXR") {
-        auto imgf = image4f{img.size()};
+        auto imgf = image4f{img.imsize()};
         srgb_to_linear(imgf, img);
         save_exr_image(filename, imgf);
     } else {
@@ -581,29 +581,29 @@ void save_tonemapped_image(const string& filename, const image4f& hdr,
     if (is_hdr_filename(filename)) {
         save_image(filename, hdr);
     } else {
-        auto ldr = image4b{hdr.size()};
+        auto ldr = image4b{hdr.imsize()};
         tonemap_image(ldr, hdr, exposure, filmic, srgb);
         save_image(filename, ldr);
     }
 }
 
 // Resize image.
-void resize_image(image4f& res_img, const image4f& img) {
-    stbir_resize_float_generic((float*)img.data(), img.size().x, img.size().y,
-        sizeof(vec4f) * img.size().x, (float*)res_img.data(), res_img.size().x,
-        res_img.size().y, sizeof(vec4f) * res_img.size().x, 4, 3, 0,
+void resize_image(image_view<vec4f> res_img, image_view<const vec4f> img) {
+    stbir_resize_float_generic((float*)img.data(), img.imsize().x, img.imsize().y,
+        sizeof(vec4f) * img.imsize().x, (float*)res_img.data(), res_img.imsize().x,
+        res_img.imsize().y, sizeof(vec4f) * res_img.imsize().x, 4, 3, 0,
         STBIR_EDGE_CLAMP, STBIR_FILTER_DEFAULT, STBIR_COLORSPACE_LINEAR,
         nullptr);
 }
-void resize_image(image4f& res_img, const image4f& img, const vec2i& size_) {
+void resize_image(image4f& res_img, image_view<const vec4f> img, const vec2i& size_) {
     auto size = size_;
     if (size == zero2i) {
         throw std::invalid_argument("bad image size in resize_image");
     }
     if (size.y == 0) {
-        size.y = (int)round(size.x * (float)img.size().y / (float)img.size().x);
+        size.y = (int)round(size.x * (float)img.imsize().y / (float)img.imsize().x);
     } else if (size.x == 0) {
-        size.x = (int)round(size.y * (float)img.size().x / (float)img.size().y);
+        size.x = (int)round(size.y * (float)img.imsize().x / (float)img.imsize().y);
     }
     res_img = {size};
     resize_image(res_img, img);
@@ -767,7 +767,7 @@ void load_volume(const string& filename, volume1f& vol) {
 
 // Saves volume data in binary format.
 void save_volume(const string& filename, const volume1f& vol) {
-    if (!save_yvol(filename.c_str(), vol.size().x, vol.size().y, vol.size().z,
+    if (!save_yvol(filename.c_str(), vol.volsize().x, vol.volsize().y, vol.volsize().z,
             1, vol.data())) {
         throw imageio_error("error saving volume " + filename);
     }

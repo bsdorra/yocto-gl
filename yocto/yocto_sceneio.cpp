@@ -244,9 +244,9 @@ namespace yocto {
 template <typename T>
 inline void to_json(json& js, const image<T>& value) {
     js           = json::object();
-    js["width"]  = value.size().x;
-    js["height"] = value.size().y;
-    js["pixels"] = value._pixels;
+    js["width"]  = value.imsize().x;
+    js["height"] = value.imsize().y;
+    js["pixels"] = value.data_vector();
 }
 template <typename T>
 inline void from_json(const json& js, image<T>& value) {
@@ -258,10 +258,10 @@ inline void from_json(const json& js, image<T>& value) {
 template <typename T>
 inline void to_json(json& js, const volume<T>& value) {
     js           = json::object();
-    js["width"]  = value.size().x;
-    js["height"] = value.size().y;
-    js["depth"]  = value.size().z;
-    js["voxels"] = value._voxels;
+    js["width"]  = value.volsize().x;
+    js["height"] = value.volsize().y;
+    js["depth"]  = value.volsize().z;
+    js["voxels"] = value.data_vector();
 }
 template <typename T>
 inline void from_json(const json& js, volume<T>& value) {
@@ -566,7 +566,7 @@ void from_json_procedural(
         value.ldr_as_linear = true;
     }
     if (!is_hdr) {
-        value.ldr_image = {value.hdr_image.size()};
+        value.ldr_image = {value.hdr_image.imsize()};
         if (!value.ldr_as_linear) {
             linear_to_srgb(value.ldr_image, value.hdr_image);
         } else {
@@ -3746,8 +3746,8 @@ void read_value(input_file& fs, string& str) {
 // Serialize image
 template <typename T>
 void write_value(output_file& fs, const image<T>& img) {
-    write_value(fs, img.size());
-    write_values(fs, img.data(), (size_t)img.size().x * (size_t)img.size().y);
+    write_value(fs, img.imsize());
+    write_values(fs, img.data(), (size_t)img.imsize().x * (size_t)img.imsize().y);
 }
 template <typename T>
 void read_value(input_file& fs, image<T>& img) {
@@ -3760,9 +3760,9 @@ void read_value(input_file& fs, image<T>& img) {
 // Serialize image
 template <typename T>
 void write_value(output_file& fs, const volume<T>& vol) {
-    write_value(fs, vol.size());
+    write_value(fs, vol.volsize());
     write_values(fs, vol.data(),
-        (size_t)vol.size().x * (size_t)vol.size().y * (size_t)vol.size().z);
+        (size_t)vol.volsize().x * (size_t)vol.volsize().y * (size_t)vol.volsize().z);
 }
 template <typename T>
 void read_value(input_file& fs, volume<T>& vol) {

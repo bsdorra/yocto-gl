@@ -38,9 +38,9 @@ using namespace yocto;
 #include "ext/CLI11.hpp"
 
 image4f compute_diff_image(const image4f& a, const image4f& b) {
-    auto diff = image{a.size(), zero4f};
-    for (auto j = 0; j < a.size().y; j++) {
-        for (auto i = 0; i < a.size().x; i++) {
+    auto diff = image{a.imsize(), zero4f};
+    for (auto j = 0; j < a.imsize().y; j++) {
+        for (auto i = 0; i < a.imsize().x; i++) {
             diff[{i, j}] = {abs(a[{i, j}].x - b[{i, j}].x),
                 abs(a[{i, j}].y - b[{i, j}].y), abs(a[{i, j}].z - b[{i, j}].z),
                 abs(a[{i, j}].w - b[{i, j}].w)};
@@ -59,9 +59,9 @@ vec4f max_diff_value(const image4f& diff) {
 }
 
 image4f display_diff(const image4f& diff) {
-    auto display = image{diff.size(), zero4f};
-    for (auto j = 0; j < diff.size().y; j++) {
-        for (auto i = 0; i < diff.size().x; i++) {
+    auto display = image{diff.imsize(), zero4f};
+    for (auto j = 0; j < diff.imsize().y; j++) {
+        for (auto i = 0; i < diff.imsize().x; i++) {
             auto diff_value = max(diff[{i, j}]);
             display[{i, j}] = {diff_value, diff_value, diff_value, 1};
         }
@@ -103,7 +103,7 @@ int main(int argc, char* argv[]) {
     } catch (const std::exception& e) {
         exit_error(e.what());
     }
-    if (img1.size() != img2.size()) exit_error("image size differs");
+    if (img1.imsize() != img2.imsize()) exit_error("image size differs");
     auto diff     = compute_diff_image(img1, img2);
     auto max_diff = max_diff_value(diff);
     if (!output.empty()) {

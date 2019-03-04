@@ -89,7 +89,41 @@
 #include "yocto_utils.h"
 
 // -----------------------------------------------------------------------------
-// IMAGE DATA AND UTILITIES
+// IMAGE VIEW
+// -----------------------------------------------------------------------------
+namespace yocto {
+
+// Image view.
+template <typename T>
+struct image_view {
+    // constructors
+    image_view() : pixels{nullptr}, _size{0, 0} {}
+    image_view(T* pixels, const vec2i& size) : pixels{pixels}, _size{size} { }
+
+    // size
+    bool  empty() const { return _size.x == 0 || _size.y == 0; }
+    vec2i imsize() const { return _size; }
+
+    // element access
+    T& operator[](const vec2i& ij) { return pixels[ij.y * _size.x + ij.x]; }
+
+    // data access
+    T*       data() { return pixels; }
+
+    // iteration
+    T*       begin() { return pixels; }
+    T*       end() { return pixels + (size_t)_size.x * (size_t)_size.y; }
+
+  private:
+    // data
+    T* pixels = nullptr;
+    vec2i     _size   = zero2i;
+};
+
+}
+
+// -----------------------------------------------------------------------------
+// IMAGE CONTAINER
 // -----------------------------------------------------------------------------
 namespace yocto {
 
@@ -103,10 +137,14 @@ struct image {
     image(const vec2i& size, const T* value)
         : _size{size}
         , _pixels{value, value + (size_t)size.x * (size_t)size.y} {}
+    
+    // conversion to view
+    operator image_view<T>() { return {_pixels.data(), _size}; } 
+    operator image_view<const T>() const { return {_pixels.data(), _size}; } 
 
     // size
     bool  empty() const { return _pixels.empty(); }
-    vec2i size() const { return _size; }
+    vec2i imsize() const { return _size; }
     void  resize(const vec2i& size) {
         if (size == _size) return;
         _size = size;
@@ -122,6 +160,8 @@ struct image {
     // data access
     T*       data() { return _pixels.data(); }
     const T* data() const { return _pixels.data(); }
+    vector<T>&       data_vector() { return _pixels; }
+    const vector<T>& data_vector() const { return _pixels; }
 
     // iteration
     T*       begin() { return _pixels.data(); }
@@ -129,6 +169,7 @@ struct image {
     const T* begin() const { return _pixels.data(); }
     const T* end() const { return _pixels.data() + _pixels.size(); }
 
+  private:
     // data
     vec2i     _size   = zero2i;
     vector<T> _pixels = {};
@@ -141,18 +182,25 @@ using image4b = image<vec4b>;
 // equality
 template <typename T>
 inline bool operator==(const image<T>& a, const image<T>& b) {
-    return a.size() == b.size() && a._pixels == b._pixels;
+    return a.imsize() == b.imsize() && a.data_vector() == b.data_vector();
 }
 template <typename T>
 inline bool operator!=(const image<T>& a, const image<T>& b) {
-    return a.size() != b.size() || a._pixels != b._pixels;
+    return a.imsize() != b.imsize() || a.data_vector() != b.data_vector();
 }
+
+}
+
+// -----------------------------------------------------------------------------
+// IMAGE UTILITIES
+// -----------------------------------------------------------------------------
+namespace yocto {
 
 // Image region
 struct image_region {
     vec2i min = zero2i;
     vec2i max = zero2i;
-    vec2i size() const { return max - min; }
+    vec2i imsize() const { return max - min; }
 };
 
 // Splits an image into an array of regions
@@ -162,33 +210,33 @@ inline void make_image_regions(vector<image_region>& regions, const vec2i& size,
 // Gets pixels in an image region
 template <typename T>
 inline void get_image_region(
-    image<T>& clipped, const image<T>& img, const image_region& region);
+    image<T>& clipped, image_view<const T> img, const image_region& region);
 
 // Conversion from/to floats.
-void byte_to_float(image4f& fl, const image4b& bt);
-void float_to_byte(image4b& bt, const image4f& fl);
+void byte_to_float(image_view<vec4f> fl, image_view<const vec4b> bt);
+void float_to_byte(image_view<vec4b> bt, image_view<const vec4f> fl);
 
 // Conversion between linear and gamma-encoded images.
-void srgb_to_linear(image4f& lin, const image4f& srgb);
-void linear_to_srgb(image4f& srgb, const image4f& lin);
-void srgb_to_linear(image4f& lin, const image4b& srgb);
-void linear_to_srgb(image4b& srgb, const image4f& lin);
+void srgb_to_linear(image_view<vec4f> lin, image_view<const vec4f> srgb);
+void linear_to_srgb(image_view<vec4f> srgb, image_view<const vec4f> lin);
+void srgb_to_linear(image_view<vec4f> lin, image_view<const vec4b> srgb);
+void linear_to_srgb(image_view<vec4b> srgb, image_view<const vec4f> lin);
 
 // Conversion between linear and gamma-encoded images.
-void gamma_to_linear(image4f& lin, const image4f& srgb, float gamma);
-void linear_to_gamma(image4f& srgb, const image4f& lin, float gamma);
+void gamma_to_linear(image_view<vec4f> lin, image_view<const vec4f> srgb, float gamma);
+void linear_to_gamma(image_view<vec4f> srgb, image_view<const vec4f> lin, float gamma);
 
 // Apply exposure and filmic tone mapping
 void tonemap_image(
-    image4f& ldr, const image4f& hdr, float exposure, bool filmic, bool srgb);
+    image_view<vec4f> ldr, image_view<const vec4f> hdr, float exposure, bool filmic, bool srgb);
 void tonemap_image(
-    image4b& ldr, const image4f& hdr, float exposure, bool filmic, bool srgb);
-void tonemap_image_region(image4f& ldr, const image_region& region,
-    const image4f& hdr, float exposure, bool filmic, bool srgb);
+    image_view<vec4b> ldr, image_view<const vec4f> hdr, float exposure, bool filmic, bool srgb);
+void tonemap_image_region(image_view<vec4f> ldr, const image_region& region,
+    image_view<const vec4f> hdr, float exposure, bool filmic, bool srgb);
 
 // Resize an image.
-void resize_image(image4f& res, const image4f& img, const vec2i& size);
-void resize_image(image4f& res, const image4f& img);
+void resize_image(image<vec4f>& res, image_view<const vec4f> img, const vec2i& size);
+void resize_image(image_view<vec4f> res, image_view<const vec4f> img);
 
 }  // namespace yocto
 
@@ -199,48 +247,48 @@ namespace yocto {
 
 // Make example images in linear color space. Takes as input images allocated
 // to the desired size and fill the pixel with expected values.
-void make_grid_image(image4f& img, int tile = 8,
+void make_grid_image(image_view<vec4f> img, int tile = 8,
     const vec4f& c0 = {0.2f, 0.2f, 0.2f, 1},
     const vec4f& c1 = {0.5f, 0.5f, 0.5f, 1});
-void make_checker_image(image4f& img, int tile = 8,
+void make_checker_image(image_view<vec4f> img, int tile = 8,
     const vec4f& c0 = {0.2f, 0.2f, 0.2f, 1},
     const vec4f& c1 = {0.5f, 0.5f, 0.5f, 1});
-void make_bumpdimple_image(image4f& img, int tile = 8);
+void make_bumpdimple_image(image_view<vec4f> img, int tile = 8);
 void make_ramp_image(
-    image4f& img, const vec4f& c0, const vec4f& c1, float srgb = false);
-void make_gammaramp_image(image4f& img);
-void make_uvramp_image(image4f& img);
-void make_uvgrid_image(image4f& img, int tile = 8, bool colored = true);
-void make_blackbodyramp_image(image4f& img, float start_temperature = 1000,
+    image_view<vec4f> img, const vec4f& c0, const vec4f& c1, float srgb = false);
+void make_gammaramp_image(image_view<vec4f> img);
+void make_uvramp_image(image_view<vec4f> img);
+void make_uvgrid_image(image_view<vec4f> img, int tile = 8, bool colored = true);
+void make_blackbodyramp_image(image_view<vec4f> img, float start_temperature = 1000,
     float end_temperature = 12000);
 
 // Comvert a bump map to a normal map. All linear color spaces.
-void bump_to_normal_map(image4f& norm, const image4f& img, float scale = 1);
+void bump_to_normal_map(image_view<vec4f> norm, image_view<const vec4f> img, float scale = 1);
 
 // Make a sunsky HDR model with sun at sun_angle elevation in [0,pif/2],
 // turbidity in [1.7,10] with or without sun. The sun can be enabled or
 // disabled with has_sun. The sun parameters can be slightly modified by
 // changing the sun intensity and temperature. Has a convention, a temperature
 // of 0 sets the eath sun defaults (ignoring intensity too).
-void make_sunsky_image(image4f& img, float sun_angle, float turbidity = 3,
+void make_sunsky_image(image_view<vec4f> img, float sun_angle, float turbidity = 3,
     bool has_sun = false, float sun_intensity = 1.0f, float sun_temperature = 0,
     const vec3f& ground_albedo = {0.2f, 0.2f, 0.2f});
 // Make an image of multiple lights.
-void make_lights_image(image4f& img, const vec3f& le = {1, 1, 1},
+void make_lights_image(image_view<vec4f> img, const vec3f& le = {1, 1, 1},
     int nlights = 4, float langle = pif / 4, float lwidth = pif / 16,
     float lheight = pif / 16);
 
 // Make a noise image. Wrap works only if both resx and resy are powers of two.
-void make_noise_image(image4f& img, float scale = 1, bool wrap = true);
-void make_fbm_image(image4f& img, float scale = 1, float lacunarity = 2,
+void make_noise_image(image_view<vec4f> img, float scale = 1, bool wrap = true);
+void make_fbm_image(image_view<vec4f> img, float scale = 1, float lacunarity = 2,
     float gain = 0.5f, int octaves = 6, bool wrap = true);
-void make_ridge_image(image4f& img, float scale = 1, float lacunarity = 2,
+void make_ridge_image(image_view<vec4f> img, float scale = 1, float lacunarity = 2,
     float gain = 0.5f, float offset = 1.0f, int octaves = 6, bool wrap = true);
-void make_turbulence_image(image4f& img, float scale = 1, float lacunarity = 2,
+void make_turbulence_image(image_view<vec4f> img, float scale = 1, float lacunarity = 2,
     float gain = 0.5f, int octaves = 6, bool wrap = true);
 
 // Add a border to an image
-void add_image_border(image4f& img, int border_width = 2,
+void add_image_border(image_view<vec4f> img, int border_width = 2,
     const vec4f& border_color = {0, 0, 0, 1});
 
 }  // namespace yocto
@@ -265,7 +313,7 @@ struct volume {
 
     // size
     bool  empty() const { return _voxels.empty(); }
-    vec3i size() const { return _size; }
+    vec3i volsize() const { return _size; }
     void  resize(const vec3i& size) {
         if (size == _size) return;
         _size = size;
@@ -283,6 +331,8 @@ struct volume {
     // data access
     T*       data() { return _voxels.data(); }
     const T* data() const { return _voxels.data(); }
+    vector<T>&       data_vector() { return _voxels; }
+    const vector<T>& data_vector() const { return _voxels; }
 
     // iteration
     T*       begin() { return _voxels.data(); }
@@ -301,11 +351,11 @@ using volume1f = volume<float>;
 // equality
 template <typename T>
 inline bool operator==(const volume<T>& a, const volume<T>& b) {
-    return a.size() == b.size() && a._voxels == b._voxels;
+    return a.volsize() == b.volsize() && a._voxels == b._voxels;
 }
 template <typename T>
 inline bool operator!=(const volume<T>& a, const volume<T>& b) {
-    return a.size() != b.size() && a._voxels != b._voxels;
+    return a.volsize() != b.volsize() && a._voxels != b._voxels;
 }
 
 // make a simple example volume
@@ -579,10 +629,10 @@ namespace yocto {
 // Gets pixels in an image region
 template <typename T>
 inline void get_image_region(
-    image<T>& clipped, const image<T>& img, const image_region& region) {
-    clipped.resize(region.size());
-    for (auto j = 0; j < region.size().y; j++) {
-        for (auto i = 0; i < region.size().x; i++) {
+    image<T>& clipped, image_view<const T> img, const image_region& region) {
+    clipped.resize(region.imsize());
+    for (auto j = 0; j < region.imsize().y; j++) {
+        for (auto i = 0; i < region.imsize().x; i++) {
             clipped[{i, j}] = img[{i + region.min.x, j + region.min.y}];
         }
     }

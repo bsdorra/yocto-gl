@@ -127,9 +127,9 @@ void start_rendering_async(app_state& app) {
     for (auto j = 0; j < app.image_size.y; j++) {
         for (auto i = 0; i < app.image_size.x; i++) {
             auto pi = clamp(
-                     i / app.preview_ratio, 0, display_preview.size().x - 1),
+                     i / app.preview_ratio, 0, display_preview.imsize().x - 1),
                  pj = clamp(
-                     j / app.preview_ratio, 0, display_preview.size().y - 1);
+                     j / app.preview_ratio, 0, display_preview.imsize().y - 1);
             large_preview[{i, j}] = display_preview[{pi, pj}];
         }
     }
@@ -224,7 +224,7 @@ void draw_opengl_widgets(const opengl_window& win) {
             }
             if (begin_tabitem_opengl_widget(win, "trace")) {
                 draw_label_opengl_widget(win, "image", "%d x %d @ %d",
-                    app.image.size().x, app.image.size().y,
+                    app.image.imsize().x, app.image.imsize().y,
                     (int)app.trace_sample);
                 auto cam_names = vector<string>();
                 for (auto& camera : app.scene.cameras)
@@ -273,10 +273,10 @@ void draw_opengl_widgets(const opengl_window& win) {
                 }
                 auto mouse_pos = get_opengl_mouse_pos(win);
                 auto ij        = get_image_coords(mouse_pos, app.image_center,
-                    app.image_scale, app.image.size());
+                    app.image_scale, app.image.imsize());
                 draw_dragger_opengl_widget(win, "mouse", ij);
-                if (ij.x >= 0 && ij.x < app.image.size().x && ij.y >= 0 &&
-                    ij.y < app.image.size().y) {
+                if (ij.x >= 0 && ij.x < app.image.imsize().x && ij.y >= 0 &&
+                    ij.y < app.image.imsize().y) {
                     draw_coloredit_opengl_widget(
                         win, "pixel", app.image[{ij.x, ij.y}]);
                 } else {
@@ -307,7 +307,7 @@ void draw(const opengl_window& win) {
     set_opengl_viewport(get_opengl_framebuffer_size(win));
     clear_opengl_lframebuffer(vec4f{0.15f, 0.15f, 0.15f, 1.0f});
     if (app.load_done) {
-        update_image_view(app.image_center, app.image_scale, app.image.size(),
+        update_image_view(app.image_center, app.image_scale, app.image.imsize(),
             win_size, app.zoom_to_fit);
         if (!app.display_texture) {
             if (app.image_size != zero2i) {
@@ -318,7 +318,7 @@ void draw(const opengl_window& win) {
             auto region = image_region{};
             auto size   = 0;
             while (app.trace_queue.try_pop(region)) {
-                if (region.size() == zero2i) {
+                if (region.imsize() == zero2i) {
                     update_opengl_texture(
                         app.display_texture, app.preview, false);
                     break;
@@ -327,8 +327,8 @@ void draw(const opengl_window& win) {
                         app.exposure, app.filmic, app.srgb);
                     update_opengl_texture_region(
                         app.display_texture, app.display, region, false);
-                    size += region.size().x * region.size().y;
-                    if (size >= app.image.size().x * app.image.size().y) break;
+                    size += region.imsize().x * region.imsize().y;
+                    if (size >= app.image.imsize().x * app.image.imsize().y) break;
                 }
             }
         }
@@ -422,13 +422,13 @@ void run_ui(app_state& app) {
         if (app.load_done && (mouse_left || mouse_right) && alt_down &&
             !widgets_active) {
             auto ij = get_image_coords(
-                mouse_pos, app.image_center, app.image_scale, app.image.size());
-            if (ij.x < 0 || ij.x >= app.image.size().x || ij.y < 0 ||
-                ij.y >= app.image.size().y) {
+                mouse_pos, app.image_center, app.image_scale, app.image.imsize());
+            if (ij.x < 0 || ij.x >= app.image.imsize().x || ij.y < 0 ||
+                ij.y >= app.image.imsize().y) {
                 auto& camera = app.scene.cameras.at(
                     app.trace_options.camera_id);
                 auto ray = evaluate_camera_ray(
-                    camera, ij, app.image.size(), {0.5f, 0.5f}, zero2f);
+                    camera, ij, app.image.imsize(), {0.5f, 0.5f}, zero2f);
                 auto isec = intersect_scene_bvh(app.bvh, ray);
                 if (isec.instance_id >= 0)
                     app.selection = {typeid(yocto_instance), isec.instance_id};

@@ -854,9 +854,9 @@ vec3f evaluate_environment_emission(
 // Check texture size
 vec2i evaluate_texture_size(const yocto_texture& texture) {
     if (!texture.hdr_image.empty()) {
-        return texture.hdr_image.size();
+        return texture.hdr_image.imsize();
     } else if (!texture.ldr_image.empty()) {
-        return texture.ldr_image.size();
+        return texture.ldr_image.imsize();
     } else {
         return zero2i;
     }
@@ -930,9 +930,9 @@ float evaluate_voltexture(
     if (texture.volume_data.empty()) return 1;
 
     // get image width/height
-    auto width  = texture.volume_data.size().x;
-    auto height = texture.volume_data.size().y;
-    auto depth  = texture.volume_data.size().z;
+    auto width  = texture.volume_data.volsize().x;
+    auto height = texture.volume_data.volsize().y;
+    auto depth  = texture.volume_data.volsize().z;
 
     // get coordinates normalized for tiling
     auto s = clamp((texcoord.x + 1.0f) * 0.5f, 0.0f, 1.0f) * width;
@@ -1413,15 +1413,15 @@ string print_scene_stats(const yocto_scene& scene) {
                    vert_tangsp * sizeof(vec4f) + vert_radius * sizeof(float);
 
     for (auto& texture : scene.textures) {
-        texel_hdr += texture.hdr_image.size().x * texture.hdr_image.size().y;
-        texel_ldr += texture.ldr_image.size().x * texture.ldr_image.size().y;
+        texel_hdr += texture.hdr_image.imsize().x * texture.hdr_image.imsize().y;
+        texel_ldr += texture.ldr_image.imsize().x * texture.ldr_image.imsize().y;
     }
     memory_imgs = texel_hdr * sizeof(vec4f) + texel_ldr * sizeof(vec4b);
 
     for (auto& voltexture : scene.voltextures) {
-        voxel_hdr += voltexture.volume_data.size().x *
-                     voltexture.volume_data.size().y *
-                     voltexture.volume_data.size().z;
+        voxel_hdr += voltexture.volume_data.volsize().x *
+                     voltexture.volume_data.volsize().y *
+                     voltexture.volume_data.volsize().z;
     }
     memory_vols = voxel_hdr * sizeof(float);
 

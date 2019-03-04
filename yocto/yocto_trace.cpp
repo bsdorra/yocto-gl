@@ -1914,7 +1914,7 @@ trace_pixel& get_trace_pixel(trace_state& state, int i, int j) {
 }
 
 // Trace a block of samples
-void trace_image_region(image4f& image, trace_state& state,
+void trace_image_region(image_view<vec4f> image, trace_state& state,
     const yocto_scene& scene, const bvh_scene& bvh, const trace_lights& lights,
     const image_region& region, int num_samples,
     const trace_image_options& options) {
@@ -2014,7 +2014,7 @@ image4f trace_image(const yocto_scene& scene, const bvh_scene& bvh,
 }
 
 // Progressively compute an image by calling trace_samples multiple times.
-int trace_image_samples(image4f& image, trace_state& state,
+int trace_image_samples(image_view<vec4f> image, trace_state& state,
     const yocto_scene& scene, const bvh_scene& bvh, const trace_lights& lights,
     int current_sample, const trace_image_options& options) {
     auto regions = vector<image_region>{};
@@ -2031,13 +2031,13 @@ int trace_image_samples(image4f& image, trace_state& state,
 }
 
 // Starts an anyncrhounous renderer.
-void trace_image_async_start(image4f& image, trace_state& state,
+void trace_image_async_start(image_view<vec4f> image, trace_state& state,
     const yocto_scene& scene, const bvh_scene& bvh, const trace_lights& lights,
     vector<future<void>>& futures, atomic<int>& current_sample,
     concurrent_queue<image_region>& queue, const trace_image_options& options) {
     auto& camera     = scene.cameras.at(options.camera_id);
     auto  image_size = get_camera_image_size(camera, options.image_size);
-    image            = {image_size, zero4f};
+    for(auto& p : image) p = zero4f;
     state            = trace_state{};
     init_trace_state(state, image_size, options.random_seed);
     auto regions = vector<image_region>{};

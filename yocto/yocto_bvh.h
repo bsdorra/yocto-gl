@@ -214,7 +214,7 @@ struct bvh_scene {
 struct build_bvh_options {
     bool          high_quality   = false;
     bool          use_embree     = false;
-    bool          flatten_embree = true;
+    bool          flatten_embree = false;
     bool          run_serially   = false;
     atomic<bool>* cancel_flag    = nullptr;
 };

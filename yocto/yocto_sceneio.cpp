@@ -4905,6 +4905,9 @@ void load_disney_island_cameras(
     auto camera           = yocto_camera{};
     camera.name           = get_filename(filename);
     camera.focal_length   = js.at("focalLength").get<float>() * pif / 180;
+    camera.focus_distance = js.at("centerOfInterest").get<float>();
+    // camera.lens_aperture  = js.at("lensRadius").get<float>();
+    camera.film_width     = camera.film_height * js.at("ratio").get<float>();
     auto from             = js.at("eye").get<vec3f>();
     auto to               = js.at("look").get<vec3f>();
     auto up               = js.at("up").get<vec3f>();

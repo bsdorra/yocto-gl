@@ -162,8 +162,12 @@ struct bvh_shape {
     // bvh internal nodes
     vector<bvh_node> nodes;
 
+#if YOCTO_EMBREE
     // Embree opaque data
     void* embree_bvh = nullptr;
+    // Cleanup for embree data
+    ~bvh_shape();
+#endif
 };
 
 // Instance for a scene BVH.
@@ -205,9 +209,13 @@ struct bvh_scene {
     // bvh internal nodes
     vector<bvh_node> nodes;
 
+#if YOCTO_EMBREE
     // Embree opaque data
     void* embree_bvh       = nullptr;
     bool  embree_flattened = false;
+    // Cleanup for embree data
+    ~bvh_scene();
+#endif
 };
 
 // Options for build bvh

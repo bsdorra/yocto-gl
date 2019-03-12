@@ -363,28 +363,24 @@ bool overlap_bbox(const bbox3f& bbox1, const bbox3f& bbox2) {
 // -----------------------------------------------------------------------------
 namespace yocto {
 
+#if YOCTO_EMBREE
 // Cleanup
-void clear_shape_bvh_embree(bvh_shape& bvh) {
-#if YOCTO_EMBREE
-    if (bvh.embree_bvh) {
-        rtcReleaseScene((RTCScene)bvh.embree_bvh);
+bvh_shape::~bvh_shape() {
+    if (embree_bvh) {
+        rtcReleaseScene((RTCScene)embree_bvh);
     }
-#endif
 }
-void clear_scene_bvh_embree(bvh_scene& bvh) {
-#if YOCTO_EMBREE
-    if (bvh.embree_bvh) {
-        for (auto i = 0; i < max(1, (int)bvh.instances.size()); i++) {
-            auto geom = rtcGetGeometry((RTCScene)bvh.embree_bvh, i);
-            rtcDetachGeometry((RTCScene)bvh.embree_bvh, i);
+bvh_scene::~bvh_scene() {
+    if (embree_bvh) {
+        for (auto i = 0; i < max(1, (int)instances.size()); i++) {
+            auto geom = rtcGetGeometry((RTCScene)embree_bvh, i);
+            rtcDetachGeometry((RTCScene)embree_bvh, i);
             rtcReleaseGeometry(geom);
         }
-        rtcReleaseScene((RTCScene)bvh.embree_bvh);
+        rtcReleaseScene((RTCScene)embree_bvh);
     }
-#endif
 }
 
-#if YOCTO_EMBREE
 void embree_error(void* ctx, RTCError code, const char* str) {
     switch (code) {
         case RTC_ERROR_UNKNOWN:

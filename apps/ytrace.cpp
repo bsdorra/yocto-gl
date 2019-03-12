@@ -122,7 +122,8 @@ int main(int argc, char* argv[]) {
     } catch (const std::exception& e) {
         exit_error(e.what());
     }
-    printf("loading scene [%s]\n", format_duration(get_time() - start_load).c_str());
+    printf("loading scene [%s]\n",
+        format_duration(get_time() - start_load).c_str());
 
     // tesselate
     tesselate_shapes(scene);
@@ -138,7 +139,8 @@ int main(int argc, char* argv[]) {
     auto start_bvh = get_time();
     auto bvh       = bvh_scene{};
     build_scene_bvh(scene, bvh, bvh_options);
-    printf("building bvh [%s]\n", format_duration(get_time() - start_bvh).c_str());
+    printf(
+        "building bvh [%s]\n", format_duration(get_time() - start_bvh).c_str());
 
     // init renderer
     auto lights = trace_lights{};
@@ -163,11 +165,14 @@ int main(int argc, char* argv[]) {
          sample += trace_options.samples_per_batch) {
         auto nsamples = min(trace_options.samples_per_batch,
             trace_options.num_samples - sample);
-        printf("rendering image [%d/%d] ...\n", sample, trace_options.num_samples);
+        printf(
+            "rendering image [%d/%d] ...\n", sample, trace_options.num_samples);
         auto start_batch = get_time();
         trace_image_samples(
             image, state, scene, bvh, lights, sample, trace_options);
-        printf("rendering image [%d/%d] [%s]\n", sample, trace_options.num_samples, format_duration(get_time() - start_batch).c_str());
+        printf("rendering image [%d/%d] [%s]\n", sample,
+            trace_options.num_samples,
+            format_duration(get_time() - start_batch).c_str());
         if (save_batch) {
             auto filename = replace_extension(
                 imfilename, std::to_string(sample + nsamples) + "." +
@@ -188,7 +193,8 @@ int main(int argc, char* argv[]) {
     } catch (const std::exception& e) {
         exit_error(e.what());
     }
-    printf("saving image [%s]\n", format_duration(get_time() - start_save).c_str());
+    printf("saving image [%s]\n",
+        format_duration(get_time() - start_save).c_str());
 
     // done
     return 0;

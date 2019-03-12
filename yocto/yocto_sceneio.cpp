@@ -4943,9 +4943,8 @@ string get_disney_island_material_from_obj(const std::string& filename) {
     return name;
 }
 
-void load_disney_island_archive(const std::string& filename,
-    yocto_scene& scene, std::unordered_map<std::string, int>& mmap,
-    bool save_names) {
+void load_disney_island_archive(const std::string& filename, yocto_scene& scene,
+    std::unordered_map<std::string, int>& mmap, bool save_names) {
     auto buffer = std::string{};
     load_text(filename, buffer);
     auto view = sajson::mutable_string_view(buffer.size(), buffer.data());

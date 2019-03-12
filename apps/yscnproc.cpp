@@ -94,13 +94,14 @@ int main(int argc, char** argv) {
     // load scene
     printf("loading scene ...\n");
     auto start_load = get_time();
-    auto scene = yocto_scene{};
+    auto scene      = yocto_scene{};
     try {
         load_scene(filename, scene, load_options);
     } catch (const std::exception& e) {
         exit_error(e.what());
     }
-    printf("loading scene [%s]\n", format_duration(get_time() - start_load).c_str());
+    printf("loading scene [%s]\n",
+        format_duration(get_time() - start_load).c_str());
 
     // validate scene
     print_validation_errors(scene, true);
@@ -164,7 +165,8 @@ int main(int argc, char** argv) {
     } catch (const std::exception& e) {
         exit_error(e.what());
     }
-    printf("saving scene [%s]\n", format_duration(get_time() - start_save).c_str());
+    printf("saving scene [%s]\n",
+        format_duration(get_time() - start_save).c_str());
 
     // done
     return 0;

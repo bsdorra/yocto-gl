@@ -53,8 +53,6 @@
 
 #include "ext/json.hpp"
 
-#include <fstream>
-#include <iomanip>
 #include <memory>
 
 // -----------------------------------------------------------------------------
@@ -91,18 +89,15 @@ namespace yocto {
 
 // Load a JSON object
 inline void load_json(const string& filename, json& js) {
-    // we have to use streams here since the json library is faster with them
-    auto stream = std::ifstream(filename);
-    if (!stream) throw runtime_error("could not open file " + filename);
-    stream >> js;
+    auto text = ""s;
+    load_text(filename, text);
+    js = json::parse(text);
 }
 
 // Save a JSON object
 inline void save_json(const string& filename, const json& js) {
     // we have to use streams here since the json library is faster with them
-    auto stream = std::ofstream(filename);
-    if (!stream) throw runtime_error("could not open file " + filename);
-    stream << std::setw(4) << js;
+    save_text(filename, js.dump(4));
 }
 
 }  // namespace yocto

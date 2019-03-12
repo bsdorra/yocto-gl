@@ -54,6 +54,8 @@
 #include "ext/json.hpp"
 
 #include <memory>
+#include <fstream>
+#include <iomanip>
 
 // -----------------------------------------------------------------------------
 // USING DIRECTIVES
@@ -89,14 +91,18 @@ namespace yocto {
 
 // Load a JSON object
 inline void load_json(const string& filename, json& js) {
-    auto txt = string{};
-    load_text(filename, txt);
-    js = json::parse(txt);
+    // we have to use streams here since the json library is faster with them
+    auto stream = std::ifstream(filename);
+    if(!stream) throw runtime_error("could not open file " + filename);
+    stream >> js;
 }
 
 // Save a JSON object
 inline void save_json(const string& filename, const json& js) {
-    save_text(filename, js.dump(4));
+    // we have to use streams here since the json library is faster with them
+    auto stream = std::ofstream(filename);
+    if(!stream) throw runtime_error("could not open file " + filename);
+    stream << std::setw(4) << js;
 }
 
 }  // namespace yocto

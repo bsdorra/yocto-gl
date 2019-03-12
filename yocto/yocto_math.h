@@ -799,6 +799,10 @@ constexpr inline vec<T, N> apply(T (*func)(T, T), const vec<T, N>& a, T b) {
 
 // Functions applied to vector elements
 template <typename T, int N>
+constexpr inline vec<T, N> sqrt(const vec<T, N>& a) {
+    return apply(sqrt, a);
+};
+template <typename T, int N>
 constexpr inline vec<T, N> exp(const vec<T, N>& a) {
     return apply(exp, a);
 };

@@ -4944,7 +4944,59 @@ string get_disney_island_material_from_obj(const std::string& filename) {
     return name;
 }
 
-void load_disney_island_archive(const std::string& filename, yocto_scene& scene, std::unordered_map<std::string, int>& mmap, bool save_names) {
+void load_disney_island_archive_sajson(const std::string& filename, yocto_scene& scene, std::unordered_map<std::string, int>& mmap, bool save_names) {
+    auto buffer = std::string{};
+    load_text(filename, buffer);
+    auto view = sajson::mutable_string_view(buffer.size(), buffer.data());
+    auto doc  = sajson::parse(sajson::dynamic_allocation(), view);
+    auto iijs = doc.get_root();
+    for (auto j = 0; j < iijs.get_length(); j++) {
+        auto sname  = iijs.get_object_key(j).as_string();
+        auto xforms = iijs.get_object_value(j);
+        auto shape  = yocto_shape{};
+        if (save_names) shape.name = sname;
+        shape.filename = sname;
+        auto mname     = get_disney_island_material_from_obj(shape.filename);
+        shape.material = mmap.at(mname);
+        scene.shapes.push_back(shape);
+        auto sum_scale = vec<double, 3>{0, 0, 0};
+        auto ssq_scale = vec<double, 3>{0, 0, 0};
+        auto min_scale = vec<double, 3>{type_max<double>()};
+        auto max_scale = vec<double, 3>{type_min<double>()};
+        for (auto i = 0; i < xforms.get_length(); i++) {
+            auto iname  = xforms.get_object_key(i).as_string();
+            auto xform_ = xforms.get_object_value(i);
+            auto xform  = mat4f{};
+            for (auto c = 0; c < 4; c++)
+                for (auto r = 0; r < 4; r++)
+                    xform[c][r] =
+                        xform_.get_array_element(c * 4 + r).get_double_value();
+            auto instance = yocto_instance{};
+            if (save_names) instance.name = iname;
+            instance.shape = (int)scene.shapes.size() - 1;
+            instance.frame = mat_to_frame(xform);
+            auto scale     = vec<double, 3>{length(instance.frame.x),
+                length(instance.frame.y), length(instance.frame.z)};
+            sum_scale += scale;
+            ssq_scale += pow(scale, 2.0);
+            min_scale = min(min_scale, scale);
+            max_scale = max(max_scale, scale);
+            scene.instances.push_back(instance);
+        }
+        auto avg_scale = sum_scale / xforms.get_length();
+        auto std_scale = sqrt(ssq_scale / xforms.get_length() -
+                              pow(sum_scale / xforms.get_length(), 2.0));
+        printf("scale: %lg %lg %lg --- %lg %lg %lg\n", avg_scale[0],
+            avg_scale[1], avg_scale[2], std_scale[0], std_scale[1],
+            std_scale[2]);
+        printf("       %lg %lg %lg --- %lg %lg %lg\n", min_scale[0],
+            min_scale[1], min_scale[2], max_scale[0], max_scale[1],
+            max_scale[2]);
+    }
+}
+
+void load_disney_island_archive(const std::string& filename, yocto_scene& scene, 
+    std::unordered_map<std::string, int>& mmap, bool save_names) {
     auto buffer = std::string{};
     load_text(filename, buffer);
     auto view = sajson::mutable_string_view(buffer.size(), buffer.data());

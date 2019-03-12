@@ -4928,39 +4928,90 @@ void load_disney_island_materials(const std::string& filename,
     }
 }
 
+string get_disney_island_material_from_obj(const std::string& filename) {
+    auto name = ""s;
+    auto        fs   = fopen(filename.c_str(), "rt");
+    if (!fs)
+        throw sceneio_error("error reading obj " + filename);
+    char buffer[4096];
+    while (fgets(buffer, sizeof(buffer), fs)) {
+        if (strstr(buffer, "usemtl ") != buffer) continue;
+        char name_[1024];
+        sscanf(buffer, "usemtl %s", name_);
+        name = name_;
+    }
+    fclose(fs);
+    return name;
+}
+
+void load_disney_island_archive(const std::string& filename, yocto_scene& scene, std::unordered_map<std::string, int>& mmap, bool save_names) {
+    auto buffer = std::string{};
+    load_text(filename, buffer);
+    auto view = sajson::mutable_string_view(buffer.size(), buffer.data());
+    auto doc  = sajson::parse(sajson::dynamic_allocation(), view);
+    auto iijs = doc.get_root();
+    for (auto j = 0; j < iijs.get_length(); j++) {
+        auto sname  = iijs.get_object_key(j).as_string();
+        auto xforms = iijs.get_object_value(j);
+        auto shape  = yocto_shape{};
+        if (save_names) shape.name = sname;
+        shape.filename = sname;
+        auto mname     = get_disney_island_material_from_obj(shape.filename);
+        shape.material = mmap.at(mname);
+        scene.shapes.push_back(shape);
+        auto sum_scale = vec<double, 3>{0, 0, 0};
+        auto ssq_scale = vec<double, 3>{0, 0, 0};
+        auto min_scale = vec<double, 3>{type_max<double>()};
+        auto max_scale = vec<double, 3>{type_min<double>()};
+        for (auto i = 0; i < xforms.get_length(); i++) {
+            auto iname  = xforms.get_object_key(i).as_string();
+            auto xform_ = xforms.get_object_value(i);
+            auto xform  = mat4f{};
+            for (auto c = 0; c < 4; c++)
+                for (auto r = 0; r < 4; r++)
+                    xform[c][r] =
+                        xform_.get_array_element(c * 4 + r).get_double_value();
+            auto instance = yocto_instance{};
+            if (save_names) instance.name = iname;
+            instance.shape = (int)scene.shapes.size() - 1;
+            instance.frame = mat_to_frame(xform);
+            auto scale     = vec<double, 3>{length(instance.frame.x),
+                length(instance.frame.y), length(instance.frame.z)};
+            sum_scale += scale;
+            ssq_scale += pow(scale, 2.0);
+            min_scale = min(min_scale, scale);
+            max_scale = max(max_scale, scale);
+            scene.instances.push_back(instance);
+        }
+        auto avg_scale = sum_scale / xforms.get_length();
+        auto std_scale = sqrt(ssq_scale / xforms.get_length() -
+                              pow(sum_scale / xforms.get_length(), 2.0));
+        printf("scale: %lg %lg %lg --- %lg %lg %lg\n", avg_scale[0],
+            avg_scale[1], avg_scale[2], std_scale[0], std_scale[1],
+            std_scale[2]);
+        printf("       %lg %lg %lg --- %lg %lg %lg\n", min_scale[0],
+            min_scale[1], min_scale[2], max_scale[0], max_scale[1],
+            max_scale[2]);
+    }
+}
+
 void load_disney_island_elements(const std::string& filename,
-    yocto_scene& scene, std::unordered_map<std::string, int>& mmap, 
+    yocto_scene& scene, std::unordered_map<std::string, int>& mmap,
     bool save_names = false) {
-    auto get_material = [](const std::string& filename) {
-        std::string name = "";
-        auto        fs   = fopen(filename.c_str(), "rt");
-        if (!fs) {
-            printf("error reading obj");
-            return name;
-        }
-        char buffer[4096];
-        while (fgets(buffer, sizeof(buffer), fs)) {
-            if (strstr(buffer, "usemtl ") != buffer) continue;
-            char name_[1024];
-            sscanf(buffer, "usemtl %s", name_);
-            name = name_;
-        }
-        fclose(fs);
-        return name;
-    };
     auto js = json{};
     load_json(filename, js);
     // hack for instancedCopies
     auto njs                    = js;
-    auto name = js.at("name").get<string>();
+    auto name                   = js.at("name").get<string>();
     js["instancedCopies"][name] = njs;
     auto obj_file               = js.at("geomObjFile").get<string>();
     for (auto& icjs : js.at("instancedCopies")) {
         auto shape = yocto_shape{};
         if (save_names) shape.name = icjs.at("name").get<string>();
-        shape.filename = icjs.count("geomObjFile") ? icjs.at("geomObjFile").get<string>()
-                                                      : obj_file;
-        auto mname        = get_material(shape.filename);
+        shape.filename = icjs.count("geomObjFile")
+                             ? icjs.at("geomObjFile").get<string>()
+                             : obj_file;
+        auto mname     = get_disney_island_material_from_obj(shape.filename);
         shape.material = mmap.at(mname);
         scene.shapes.push_back(shape);
         auto instance = yocto_instance{};
@@ -4969,7 +5020,7 @@ void load_disney_island_elements(const std::string& filename,
         if (icjs.at("transformMatrix").is_null()) {
             printf(" -- null transform\n");
         } else {
-            auto xform = icjs.at("transformMatrix").get<mat4f>();
+            auto xform     = icjs.at("transformMatrix").get<mat4f>();
             instance.frame = mat_to_frame(xform);
         }
         scene.instances.push_back(instance);
@@ -4982,57 +5033,13 @@ void load_disney_island_elements(const std::string& filename,
             }
             auto filename = ijs.at("jsonFile").get<std::string>();
             printf("%s\n", filename.c_str());
-            auto buffer = std::string{};
-            load_text(filename, buffer);
-            auto view = sajson::mutable_string_view(buffer.size(), buffer.data());
-            auto doc  = sajson::parse(sajson::dynamic_allocation(), view);
-            auto iijs = doc.get_root();
-            for (auto j = 0; j < iijs.get_length(); j++) {
-                auto sname  = iijs.get_object_key(j).as_string();
-                auto xforms = iijs.get_object_value(j);
-                auto shape  = yocto_shape{};
-                if (save_names) shape.name = sname;
-                shape.filename = sname;
-                auto mname = get_material(shape.filename);
-                shape.material = mmap.at(mname);
-                scene.shapes.push_back(shape);
-                auto sum_scale = vec<double, 3>{0, 0, 0};
-                auto ssq_scale = vec<double, 3>{0, 0, 0};
-                auto min_scale = vec<double, 3>{type_max<double>()};
-                auto max_scale = vec<double, 3>{type_min<double>()};
-                for (auto i = 0; i < xforms.get_length(); i++) {
-                    auto iname  = xforms.get_object_key(i).as_string();
-                    auto xform_ = xforms.get_object_value(i);
-                    auto xform  = mat4f{};
-                    for (auto c = 0; c < 4; c++)
-                        for (auto r = 0; r < 4; r++)
-                            xform[c][r] = xform_.get_array_element(c*4+r).get_double_value();
-                    auto instance = yocto_instance{};
-                    if (save_names) instance.name = iname;
-                    instance.shape = (int)scene.shapes.size() - 1;
-                    instance.frame = mat_to_frame(xform);
-                    auto scale = vec<double, 3>{ length(instance.frame.x), length(instance.frame.y), length(instance.frame.z) };
-                    sum_scale += scale;
-                    ssq_scale += pow(scale, 2.0);
-                    min_scale = min(min_scale, scale);
-                    max_scale = max(max_scale, scale);
-                    scene.instances.push_back(instance);
-                }
-                auto avg_scale = sum_scale / xforms.get_length();
-                auto std_scale = sqrt(ssq_scale / xforms.get_length() -
-                                      pow(sum_scale / xforms.get_length(), 2.0));
-                printf("scale: %lg %lg %lg --- %lg %lg %lg\n", avg_scale[0],
-                    avg_scale[1], avg_scale[2], std_scale[0], std_scale[1],
-                    std_scale[2]);
-                printf("       %lg %lg %lg --- %lg %lg %lg\n", min_scale[0],
-                    min_scale[1], min_scale[2], max_scale[0], max_scale[1],
-                    max_scale[2]);
-            }
+            load_disney_island_archive(filename, scene, mmap, save_names);
         }
     }
 }
 
-void load_disney_island_scene(const std::string& filename, yocto_scene& scene, const load_scene_options& options) {
+void load_disney_island_scene(const std::string& filename, yocto_scene& scene,
+    const load_scene_options& options) {
     try {
         auto js = json{};
         load_json(filename, js);
